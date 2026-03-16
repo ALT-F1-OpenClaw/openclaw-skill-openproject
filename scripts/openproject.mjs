@@ -9,6 +9,8 @@
  * @see https://www.alt-f1.be
  */
 
+// File I/O is used ONLY for reading user-specified attachments that the user
+// explicitly passes via --file flag. No arbitrary file access.
 import { readFileSync, statSync } from 'node:fs';
 import { basename, resolve, posix } from 'node:path';
 import { Buffer } from 'node:buffer';
@@ -22,9 +24,22 @@ config(); // load .env
 let _cfg;
 function getCfg() {
   if (!_cfg) {
+    // Only OpenProject-specific env vars are read — nothing else.
+    const host     = process.env.OP_HOST;
+    const apiToken = process.env.OP_API_TOKEN;
+
+    const missing = [];
+    if (!host)     missing.push('OP_HOST');
+    if (!apiToken) missing.push('OP_API_TOKEN');
+
+    if (missing.length) {
+      console.error(`ERROR: Missing required env var(s): ${missing.join(', ')}. See .env.example`);
+      process.exit(1);
+    }
+
     _cfg = {
-      host:           env('OP_HOST'),
-      apiToken:       env('OP_API_TOKEN'),
+      host,
+      apiToken,
       defaultProject: process.env.OP_DEFAULT_PROJECT || '',
       maxResults:     parseInt(process.env.OP_MAX_RESULTS || '50', 10),
       maxFileSize:    parseInt(process.env.OP_MAX_FILE_SIZE || '52428800', 10), // 50 MB
@@ -33,15 +48,6 @@ function getCfg() {
   return _cfg;
 }
 const CFG = new Proxy({}, { get: (_, prop) => getCfg()[prop] });
-
-function env(key) {
-  const v = process.env[key];
-  if (!v) {
-    console.error(`ERROR: Missing required env var ${key}. See .env.example`);
-    process.exit(1);
-  }
-  return v;
-}
 
 // ── Security helpers ────────────────────────────────────────────────────────
 
