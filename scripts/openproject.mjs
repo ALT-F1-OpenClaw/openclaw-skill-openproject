@@ -717,6 +717,87 @@ async function cmdCategoryList(options) {
   console.log(`\n${resp._embedded.elements.length} category/categories`);
 }
 
+// ── Meeting commands (Enterprise) ────────────────────────────────────────────
+
+async function cmdMeetingRead(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+
+  const m = await opFetch(`/meetings/${options.id}`);
+
+  console.log(`📅 Meeting #${m.id}: ${m.title || '?'}`);
+  console.log(`   Type:        ${m._type || '?'}`);
+  console.log(`   Project:     ${halLink(m, 'project')}`);
+  console.log(`   Author:      ${halLink(m, 'author')}`);
+  if (m.startTime) console.log(`   Start:       ${m.startTime}`);
+  if (m.duration) console.log(`   Duration:    ${m.duration}`);
+  if (m.location) console.log(`   Location:    ${m.location}`);
+  console.log(`   Created:     ${m.createdAt?.substring(0, 10) || '?'}`);
+  console.log(`   Updated:     ${m.updatedAt?.substring(0, 10) || '?'}`);
+}
+
+async function cmdMeetingAttachmentList(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+
+  const resp = await opFetch(`/meetings/${options.id}/attachments`);
+
+  if (!resp._embedded.elements.length) {
+    console.log('No attachments on this meeting.');
+    return;
+  }
+
+  for (const a of resp._embedded.elements) {
+    const size = `${(a.fileSize / 1024).toFixed(1)} KB`;
+    const created = a.createdAt?.substring(0, 10) || '';
+    const author = halLink(a, 'author');
+    console.log(`📎  #${String(a.id).padEnd(8)}  ${a.fileName.padEnd(30)}  ${size.padStart(12)}  ${created}  ${author}`);
+  }
+  console.log(`\n${resp._embedded.elements.length} attachment(s)`);
+}
+
+async function cmdMeetingAttachmentAdd(options) {
+  if (!options.id || !options.file) {
+    console.error('ERROR: --id and --file are required');
+    process.exit(1);
+  }
+
+  const filePath = resolve(safePath(options.file) || options.file);
+  checkFileSize(filePath);
+
+  const fileContent = readFileSync(filePath);
+  const fileName = basename(filePath);
+
+  const form = new FormData();
+  form.append('file', new Blob([fileContent]), fileName);
+  form.append('metadata', JSON.stringify({ fileName, description: { format: 'plain', raw: '' } }));
+
+  const url = `${baseUrl()}/meetings/${options.id}/attachments`;
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: { 'Authorization': authHeader() },
+    body: form,
+  });
+
+  if (!resp.ok) {
+    const body = await resp.text();
+    let json;
+    try { json = JSON.parse(body); } catch { json = null; }
+    const msg = json?.message || json?.errorIdentifier || body;
+    console.error(`ERROR (${resp.status}): ${msg}`);
+    process.exit(1);
+  }
+
+  const result = await resp.json();
+  console.log(`✅ Attachment uploaded to meeting #${options.id}`);
+  console.log(`   File: ${result.fileName}`);
+  console.log(`   ID: ${result.id}`);
+}
+
 // ── Days commands ────────────────────────────────────────────────────────────
 
 async function cmdDayRead(options) {
@@ -1701,7 +1782,7 @@ const program = new Command();
 program
   .name('openproject')
   .description('OpenClaw OpenProject Skill — project management via API v3')
-  .version('1.14.0');
+  .version('1.15.0');
 
 // Work Packages
 program.command('wp-list').description('List work packages')
@@ -1834,6 +1915,20 @@ program.command('user-read').description('Read user details')
 
 program.command('user-me').description('Show current authenticated user')
   .action(wrap(cmdUserMe));
+
+// Meetings (Enterprise)
+program.command('meeting-read').description('Read a meeting (Enterprise)')
+  .requiredOption('--id <id>', 'Meeting ID')
+  .action(wrap(cmdMeetingRead));
+
+program.command('meeting-attachment-list').description('List meeting attachments (Enterprise)')
+  .requiredOption('--id <id>', 'Meeting ID')
+  .action(wrap(cmdMeetingAttachmentList));
+
+program.command('meeting-attachment-add').description('Upload attachment to meeting (Enterprise)')
+  .requiredOption('--id <id>', 'Meeting ID')
+  .requiredOption('-f, --file <path>', 'Local file path')
+  .action(wrap(cmdMeetingAttachmentAdd));
 
 // Days
 program.command('day-read').description('Check if a date is a working day')

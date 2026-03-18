@@ -2,7 +2,7 @@
 
 This document lists all 55 API v3 resources, what this skill covers, and what's excluded with reasons.
 
-## ✅ Covered (29 resources)
+## ✅ Covered (30 resources)
 
 | Resource | Commands | Notes |
 |----------|----------|-------|
@@ -13,6 +13,7 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 | `time_entries` | time-list, time-create, time-update, time-delete | Full CRUD |
 | `users` | user-list, user-read, user-me | List/search users, view details, current user |
 | `notifications` | notification-list, notification-read, notification-mark-read, notification-mark-unread | List/read/mark with reason/project/WP filters |
+| `meetings` | meeting-read, meeting-attachment-list, meeting-attachment-add | Read meetings, attachments (Enterprise) |
 | `days` | day-read, days-list, non-working-days-list, non-working-day-read, week-days-list, week-day-read | Working/non-working days and week schedule |
 | `configuration` | config-read, project-config-read | Instance and project configuration |
 | `oauth_applications` | oauth-app-read | Read OAuth application details |
@@ -37,9 +38,6 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 | `roles` | (used internally) | Role resolution in member-list |
 
 ## ❌ Not Covered — With Reasons
-
-### Meetings (`/api/v3/meetings`)
-- **Reason:** Enterprise-only feature. Requires OpenProject Enterprise edition. Not available on Community edition instances.
 
 ### Queries (`/api/v3/queries`)
 - **Reason:** Saved work package filters/views. Internal to OpenProject UI. CLI users can use `wp-list` filters directly instead.

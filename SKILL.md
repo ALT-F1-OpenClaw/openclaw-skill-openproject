@@ -143,6 +143,19 @@ node {baseDir}/scripts/openproject.mjs notification-mark-unread --id 100
 node {baseDir}/scripts/openproject.mjs notification-mark-unread --all
 ```
 
+### Meetings (Enterprise)
+
+```bash
+# Read a meeting
+node {baseDir}/scripts/openproject.mjs meeting-read --id 10
+
+# List meeting attachments
+node {baseDir}/scripts/openproject.mjs meeting-attachment-list --id 10
+
+# Upload attachment to a meeting
+node {baseDir}/scripts/openproject.mjs meeting-attachment-add --id 10 --file ./agenda.pdf
+```
+
 ### Days (Working/Non-Working)
 
 ```bash
