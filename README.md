@@ -30,6 +30,7 @@ By [Abdelkrim BOUJRAF](https://www.alt-f1.be) / ALT-F1 SRL, Brussels 🇧🇪 �
 - **Work Packages** — Create, read, update, delete, list with filters (status, assignee, type)
 - **Projects** — List, read, create
 - **Users** — List, search, read user details, view current user
+- **Groups** — Full CRUD for user groups with member management
 - **News** — Full CRUD for project news/announcements
 - **Watchers** — List, add, remove watchers on work packages
 - **Relations** — Create, read, update, delete relations between work packages (blocks, follows, precedes, etc.)
@@ -77,13 +78,14 @@ node scripts/openproject.mjs wp-create --project my-project --subject "My first 
 
 See [SKILL.md](./SKILL.md) for full command reference.
 
-### 51 commands across 13 entities:
+### 56 commands across 14 entities:
 
 | Entity | Commands |
 |--------|----------|
 | Work Packages | `wp-list`, `wp-create`, `wp-read`, `wp-update`, `wp-delete` |
 | Projects | `project-list`, `project-read`, `project-create` |
 | Users | `user-list`, `user-read`, `user-me` |
+| Groups | `group-list`, `group-read`, `group-create`, `group-update`, `group-delete` |
 | News | `news-list`, `news-read`, `news-create`, `news-update`, `news-delete` |
 | Watchers | `watcher-list`, `watcher-add`, `watcher-remove`, `watcher-available` |
 | Relations | `relation-list`, `relation-read`, `relation-create`, `relation-update`, `relation-delete` |

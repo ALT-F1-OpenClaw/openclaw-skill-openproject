@@ -717,6 +717,110 @@ async function cmdCategoryList(options) {
   console.log(`\n${resp._embedded.elements.length} category/categories`);
 }
 
+// ── Group commands ───────────────────────────────────────────────────────────
+
+async function cmdGroupList() {
+  const resp = await opFetch(`/groups?pageSize=${CFG.maxResults}`);
+
+  if (!resp._embedded.elements.length) {
+    console.log('No groups found.');
+    return;
+  }
+
+  for (const g of resp._embedded.elements) {
+    const memberCount = g._embedded?.members?.length ?? '?';
+    console.log(`  👥  ID: ${String(g.id).padEnd(6)}  ${g.name.padEnd(30)}  ${memberCount} member(s)`);
+  }
+  console.log(`\n${resp._embedded.elements.length} group(s)`);
+}
+
+async function cmdGroupRead(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+
+  const g = await opFetch(`/groups/${options.id}`);
+
+  console.log(`👥 ${g.name}`);
+  console.log(`   ID:          ${g.id}`);
+  console.log(`   Created:     ${g.createdAt?.substring(0, 10) || '?'}`);
+  console.log(`   Updated:     ${g.updatedAt?.substring(0, 10) || '?'}`);
+
+  const members = g._embedded?.members || [];
+  if (members.length) {
+    console.log(`\n   Members (${members.length}):`);
+    for (const m of members) {
+      const login = m.login ? ` (${m.login})` : '';
+      console.log(`     👤  ID: ${String(m.id).padEnd(6)}  ${m.name}${login}`);
+    }
+  } else {
+    console.log('   Members:     none');
+  }
+}
+
+async function cmdGroupCreate(options) {
+  if (!options.name) {
+    console.error('ERROR: --name is required');
+    process.exit(1);
+  }
+
+  const payload = { name: options.name };
+
+  if (options.members) {
+    const ids = options.members.split(',').map(id => id.trim());
+    payload._links = {
+      members: ids.map(id => ({ href: `/api/v3/users/${id}` })),
+    };
+  }
+
+  const result = await opFetch('/groups', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+  console.log(`✅ Group created: ${result.name}`);
+  console.log(`   ID: ${result.id}`);
+}
+
+async function cmdGroupUpdate(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+
+  const payload = {};
+  if (options.name) payload.name = options.name;
+
+  if (options.members) {
+    const ids = options.members.split(',').map(id => id.trim());
+    payload._links = {
+      members: ids.map(id => ({ href: `/api/v3/users/${id}` })),
+    };
+  }
+
+  await opFetch(`/groups/${options.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+
+  console.log(`✅ Group #${options.id} updated`);
+}
+
+async function cmdGroupDelete(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+  if (!options.confirm) {
+    console.error('ERROR: Delete requires --confirm flag for safety');
+    process.exit(1);
+  }
+
+  await opFetch(`/groups/${options.id}`, { method: 'DELETE' });
+  console.log(`✅ Group #${options.id} deleted`);
+}
+
 // ── News commands ────────────────────────────────────────────────────────────
 
 async function cmdNewsList(options) {
@@ -1294,7 +1398,7 @@ const program = new Command();
 program
   .name('openproject')
   .description('OpenClaw OpenProject Skill — project management via API v3')
-  .version('1.7.0');
+  .version('1.8.0');
 
 // Work Packages
 program.command('wp-list').description('List work packages')
@@ -1427,6 +1531,30 @@ program.command('user-read').description('Read user details')
 
 program.command('user-me').description('Show current authenticated user')
   .action(wrap(cmdUserMe));
+
+// Groups
+program.command('group-list').description('List groups')
+  .action(wrap(cmdGroupList));
+
+program.command('group-read').description('Read group details with members')
+  .requiredOption('--id <id>', 'Group ID')
+  .action(wrap(cmdGroupRead));
+
+program.command('group-create').description('Create a group')
+  .requiredOption('-n, --name <name>', 'Group name')
+  .option('-m, --members <ids>', 'Comma-separated user IDs')
+  .action(wrap(cmdGroupCreate));
+
+program.command('group-update').description('Update a group')
+  .requiredOption('--id <id>', 'Group ID')
+  .option('-n, --name <name>', 'New group name')
+  .option('-m, --members <ids>', 'New comma-separated user IDs (replaces all)')
+  .action(wrap(cmdGroupUpdate));
+
+program.command('group-delete').description('Delete a group (requires --confirm)')
+  .requiredOption('--id <id>', 'Group ID')
+  .option('--confirm', 'Confirm deletion (required)')
+  .action(wrap(cmdGroupDelete));
 
 // News
 program.command('news-list').description('List news')

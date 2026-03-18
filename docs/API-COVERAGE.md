@@ -2,7 +2,7 @@
 
 This document lists all 55 API v3 resources, what this skill covers, and what's excluded with reasons.
 
-## ✅ Covered (19 resources)
+## ✅ Covered (20 resources)
 
 | Resource | Commands | Notes |
 |----------|----------|-------|
@@ -13,6 +13,7 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 | `time_entries` | time-list, time-create, time-update, time-delete | Full CRUD |
 | `users` | user-list, user-read, user-me | List/search users, view details, current user |
 | `notifications` | notification-list, notification-read, notification-mark-read, notification-mark-unread | List/read/mark with reason/project/WP filters |
+| `groups` | group-list, group-read, group-create, group-update, group-delete | Full CRUD with member management |
 | `news` | news-list, news-read, news-create, news-update, news-delete | Full CRUD for project announcements |
 | `watchers` | watcher-list, watcher-add, watcher-remove, watcher-available | List, add, remove watchers on WPs |
 | `relations` | relation-list, relation-read, relation-create, relation-update, relation-delete | Full CRUD with type/WP filters |
@@ -42,9 +43,6 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 
 ### Revisions (`/api/v3/revisions`)
 - **Reason:** Read-only. SCM/repository changesets linked to work packages. Requires server-side SCM integration (Git/SVN).
-
-### Groups (`/api/v3/groups`)
-- **Reason:** User group management. Admin-only operation. Low value for project management CLI.
 
 ### File Links (`/api/v3/file_links`)
 - **Reason:** External storage integration (Nextcloud, OneDrive, SharePoint). Requires storage integration to be configured server-side.

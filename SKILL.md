@@ -1,6 +1,6 @@
 ---
 name: openproject-by-altf1be
-description: "OpenProject CRUD skill — manage work packages, projects, news, users, watchers, relations, notifications, time entries, comments, attachments, wiki pages, statuses, and more via OpenProject API v3 with API token auth. Supports cloud and self-hosted instances."
+description: "OpenProject CRUD skill — manage work packages, projects, groups, news, users, watchers, relations, notifications, time entries, comments, attachments, wiki pages, statuses, and more via OpenProject API v3 with API token auth. Supports cloud and self-hosted instances."
 homepage: https://github.com/ALT-F1-OpenClaw/openclaw-skill-openproject
 metadata:
   {"openclaw": {"emoji": "📊", "requires": {"env": ["OP_HOST", "OP_API_TOKEN"]}, "optional": {"env": ["OP_DEFAULT_PROJECT", "OP_MAX_RESULTS", "OP_MAX_FILE_SIZE"]}, "primaryEnv": "OP_HOST"}}
@@ -8,7 +8,7 @@ metadata:
 
 # OpenProject by @altf1be
 
-Manage OpenProject work packages, projects, news, users, watchers, relations, notifications, time entries, comments, attachments, wiki pages, and workflow transitions via the API v3. Works with both cloud and self-hosted instances.
+Manage OpenProject work packages, projects, groups, news, users, watchers, relations, notifications, time entries, comments, attachments, wiki pages, and workflow transitions via the API v3. Works with both cloud and self-hosted instances.
 
 ## Setup
 
@@ -141,6 +141,25 @@ node {baseDir}/scripts/openproject.mjs notification-mark-read --all --project 5
 # Mark as unread
 node {baseDir}/scripts/openproject.mjs notification-mark-unread --id 100
 node {baseDir}/scripts/openproject.mjs notification-mark-unread --all
+```
+
+### Groups
+
+```bash
+# List all groups
+node {baseDir}/scripts/openproject.mjs group-list
+
+# Read group details with members
+node {baseDir}/scripts/openproject.mjs group-read --id 3
+
+# Create a group with members
+node {baseDir}/scripts/openproject.mjs group-create --name "Dev Team" --members 5,6,7
+
+# Update a group (replaces member list)
+node {baseDir}/scripts/openproject.mjs group-update --id 3 --name "Engineering" --members 5,6,7,8
+
+# Delete a group (requires --confirm)
+node {baseDir}/scripts/openproject.mjs group-delete --id 3 --confirm
 ```
 
 ### News
