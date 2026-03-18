@@ -143,6 +143,16 @@ node {baseDir}/scripts/openproject.mjs notification-mark-unread --id 100
 node {baseDir}/scripts/openproject.mjs notification-mark-unread --all
 ```
 
+### Budgets (Enterprise)
+
+```bash
+# List project budgets
+node {baseDir}/scripts/openproject.mjs budget-list --project my-project
+
+# Read budget details
+node {baseDir}/scripts/openproject.mjs budget-read --id 3
+```
+
 ### Meetings (Enterprise)
 
 ```bash

@@ -2,7 +2,7 @@
 
 This document lists all 55 API v3 resources, what this skill covers, and what's excluded with reasons.
 
-## ✅ Covered (30 resources)
+## ✅ Covered (31 resources)
 
 | Resource | Commands | Notes |
 |----------|----------|-------|
@@ -13,6 +13,7 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 | `time_entries` | time-list, time-create, time-update, time-delete | Full CRUD |
 | `users` | user-list, user-read, user-me | List/search users, view details, current user |
 | `notifications` | notification-list, notification-read, notification-mark-read, notification-mark-unread | List/read/mark with reason/project/WP filters |
+| `budgets` | budget-list, budget-read | List and read project budgets (Enterprise) |
 | `meetings` | meeting-read, meeting-attachment-list, meeting-attachment-add | Read meetings, attachments (Enterprise) |
 | `days` | day-read, days-list, non-working-days-list, non-working-day-read, week-days-list, week-day-read | Working/non-working days and week schedule |
 | `configuration` | config-read, project-config-read | Instance and project configuration |
@@ -41,9 +42,6 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 
 ### Queries (`/api/v3/queries`)
 - **Reason:** Saved work package filters/views. Internal to OpenProject UI. CLI users can use `wp-list` filters directly instead.
-
-### Budgets (`/api/v3/budgets`)
-- **Reason:** Enterprise-only feature. Financial/cost tracking tied to Enterprise edition.
 
 ### Documents (`/api/v3/documents`)
 - **Reason:** Minimal API exposure. Document management is better handled via OpenProject UI or Nextcloud/SharePoint integrations.
