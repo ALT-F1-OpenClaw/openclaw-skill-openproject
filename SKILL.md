@@ -143,6 +143,38 @@ node {baseDir}/scripts/openproject.mjs notification-mark-unread --id 100
 node {baseDir}/scripts/openproject.mjs notification-mark-unread --all
 ```
 
+### Portfolios (Enterprise)
+
+```bash
+# List portfolios
+node {baseDir}/scripts/openproject.mjs portfolio-list
+
+# Read a portfolio
+node {baseDir}/scripts/openproject.mjs portfolio-read --id 1
+
+# Update a portfolio
+node {baseDir}/scripts/openproject.mjs portfolio-update --id 1 --name "Q1 Portfolio"
+
+# Delete a portfolio (requires --confirm)
+node {baseDir}/scripts/openproject.mjs portfolio-delete --id 1 --confirm
+```
+
+### Programs (Enterprise)
+
+```bash
+# List programs
+node {baseDir}/scripts/openproject.mjs program-list
+
+# Read a program
+node {baseDir}/scripts/openproject.mjs program-read --id 1
+
+# Update a program
+node {baseDir}/scripts/openproject.mjs program-update --id 1 --name "Platform Program"
+
+# Delete a program (requires --confirm)
+node {baseDir}/scripts/openproject.mjs program-delete --id 1 --confirm
+```
+
 ### Placeholder Users (Enterprise)
 
 ```bash

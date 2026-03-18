@@ -30,6 +30,8 @@ By [Abdelkrim BOUJRAF](https://www.alt-f1.be) / ALT-F1 SRL, Brussels 🇧🇪 �
 - **Work Packages** — Create, read, update, delete, list with filters (status, assignee, type)
 - **Projects** — List, read, create
 - **Users** — List, search, read user details, view current user
+- **Portfolios** — List, read, update, delete portfolios (Enterprise)
+- **Programs** — List, read, update, delete programs (Enterprise)
 - **Placeholder Users** — Full CRUD for virtual resource planning users (Enterprise)
 - **Budgets** — List and read project budgets (Enterprise)
 - **Meetings** — Read meetings, list/upload attachments (Enterprise)
@@ -87,13 +89,15 @@ node scripts/openproject.mjs wp-create --project my-project --subject "My first 
 
 See [SKILL.md](./SKILL.md) for full command reference.
 
-### 84 commands across 23 entities:
+### 92 commands across 25 entities:
 
 | Entity | Commands |
 |--------|----------|
 | Work Packages | `wp-list`, `wp-create`, `wp-read`, `wp-update`, `wp-delete` |
 | Projects | `project-list`, `project-read`, `project-create` |
 | Users | `user-list`, `user-read`, `user-me` |
+| Portfolios 🏢 | `portfolio-list`, `portfolio-read`, `portfolio-update`, `portfolio-delete` |
+| Programs 🏢 | `program-list`, `program-read`, `program-update`, `program-delete` |
 | Placeholder Users 🏢 | `placeholder-user-list`, `placeholder-user-read`, `placeholder-user-create`, `placeholder-user-update`, `placeholder-user-delete` |
 | Budgets 🏢 | `budget-list`, `budget-read` |
 | Meetings 🏢 | `meeting-read`, `meeting-attachment-list`, `meeting-attachment-add` |
