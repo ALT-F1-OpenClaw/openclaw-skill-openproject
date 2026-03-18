@@ -2,7 +2,7 @@
 
 This document lists all 55 API v3 resources, what this skill covers, and what's excluded with reasons.
 
-## ✅ Covered (25 resources)
+## ✅ Covered (27 resources)
 
 | Resource | Commands | Notes |
 |----------|----------|-------|
@@ -13,6 +13,8 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 | `time_entries` | time-list, time-create, time-update, time-delete | Full CRUD |
 | `users` | user-list, user-read, user-me | List/search users, view details, current user |
 | `notifications` | notification-list, notification-read, notification-mark-read, notification-mark-unread | List/read/mark with reason/project/WP filters |
+| `oauth_applications` | oauth-app-read | Read OAuth application details |
+| `oauth_client_credentials` | oauth-credentials-read | Read OAuth client credentials |
 | `help_texts` | help-text-list, help-text-read | List and read attribute help texts |
 | `custom_fields` | custom-field-items | List hierarchical custom field items |
 | `custom_field_items` | custom-field-item-read, custom-field-item-branch | Read items and browse branches |
@@ -69,9 +71,6 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 
 ### Configuration (`/api/v3/configuration`)
 - **Reason:** Instance-level settings. Read-only. Admin information.
-
-### OAuth (`/api/v3/oauth_applications`, `/api/v3/oauth_client_credentials`)
-- **Reason:** OAuth app management. Admin setup task, not project management.
 
 ### My Preferences (`/api/v3/my_preferences`)
 - **Reason:** Personal UI preferences. Not relevant for project management automation.

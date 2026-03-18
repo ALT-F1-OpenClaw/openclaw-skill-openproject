@@ -717,6 +717,39 @@ async function cmdCategoryList(options) {
   console.log(`\n${resp._embedded.elements.length} category/categories`);
 }
 
+// ── OAuth commands ───────────────────────────────────────────────────────────
+
+async function cmdOauthAppRead(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+
+  const app = await opFetch(`/oauth_applications/${options.id}`);
+
+  console.log(`🔐 OAuth Application #${app.id}`);
+  console.log(`   Name:            ${app.name || '?'}`);
+  console.log(`   Client ID:       ${app.clientId || '?'}`);
+  console.log(`   Confidential:    ${app.confidential ?? '?'}`);
+  if (app.redirectUri) console.log(`   Redirect URI:    ${app.redirectUri}`);
+  console.log(`   Created:         ${app.createdAt?.substring(0, 10) || '?'}`);
+  console.log(`   Updated:         ${app.updatedAt?.substring(0, 10) || '?'}`);
+}
+
+async function cmdOauthCredentialsRead(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+
+  const cred = await opFetch(`/oauth_client_credentials/${options.id}`);
+
+  console.log(`🔑 OAuth Client Credentials #${cred.id}`);
+  console.log(`   Client ID:       ${cred.clientId || '?'}`);
+  console.log(`   Confidential:    ${cred.confidential ?? '?'}`);
+  console.log(`   Created:         ${cred.createdAt?.substring(0, 10) || '?'}`);
+}
+
 // ── Help Text commands ───────────────────────────────────────────────────────
 
 async function cmdHelpTextList() {
@@ -1538,7 +1571,7 @@ const program = new Command();
 program
   .name('openproject')
   .description('OpenClaw OpenProject Skill — project management via API v3')
-  .version('1.11.0');
+  .version('1.12.0');
 
 // Work Packages
 program.command('wp-list').description('List work packages')
@@ -1671,6 +1704,15 @@ program.command('user-read').description('Read user details')
 
 program.command('user-me').description('Show current authenticated user')
   .action(wrap(cmdUserMe));
+
+// OAuth
+program.command('oauth-app-read').description('Read an OAuth application')
+  .requiredOption('--id <id>', 'OAuth application ID')
+  .action(wrap(cmdOauthAppRead));
+
+program.command('oauth-credentials-read').description('Read OAuth client credentials')
+  .requiredOption('--id <id>', 'OAuth client credentials ID')
+  .action(wrap(cmdOauthCredentialsRead));
 
 // Help Texts
 program.command('help-text-list').description('List attribute help texts')
