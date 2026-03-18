@@ -717,6 +717,46 @@ async function cmdCategoryList(options) {
   console.log(`\n${resp._embedded.elements.length} category/categories`);
 }
 
+// ── Configuration commands ───────────────────────────────────────────────────
+
+async function cmdConfigRead() {
+  const cfg = await opFetch('/configuration');
+
+  console.log('⚙️ Instance Configuration');
+  if (cfg.maximumAttachmentFileSize) console.log(`   Max attachment size: ${cfg.maximumAttachmentFileSize} bytes`);
+  if (cfg.perPageOptions) console.log(`   Per-page options:   ${JSON.stringify(cfg.perPageOptions)}`);
+  if (cfg.dateFormat) console.log(`   Date format:        ${cfg.dateFormat}`);
+  if (cfg.timeFormat) console.log(`   Time format:        ${cfg.timeFormat}`);
+  if (cfg.startOfWeek !== undefined) console.log(`   Start of week:      ${cfg.startOfWeek}`);
+  if (cfg.activeFeatureFlags?.length) console.log(`   Feature flags:      ${cfg.activeFeatureFlags.join(', ')}`);
+
+  // Print remaining keys
+  const shown = ['_type', '_links', 'maximumAttachmentFileSize', 'perPageOptions', 'dateFormat', 'timeFormat', 'startOfWeek', 'activeFeatureFlags'];
+  const remaining = Object.entries(cfg).filter(([k]) => !shown.includes(k));
+  for (const [key, val] of remaining) {
+    const display = typeof val === 'object' ? JSON.stringify(val) : val;
+    console.log(`   ${key}: ${display}`);
+  }
+}
+
+async function cmdProjectConfigRead(options) {
+  const project = options.project || CFG.defaultProject;
+  if (!project) {
+    console.error('ERROR: --project is required (or set OP_DEFAULT_PROJECT)');
+    process.exit(1);
+  }
+
+  const cfg = await opFetch(`/projects/${project}/configuration`);
+
+  console.log(`⚙️ Project Configuration: ${project}`);
+  const skip = ['_type', '_links'];
+  for (const [key, val] of Object.entries(cfg)) {
+    if (skip.includes(key)) continue;
+    const display = typeof val === 'object' ? JSON.stringify(val) : val;
+    console.log(`   ${key}: ${display}`);
+  }
+}
+
 // ── OAuth commands ───────────────────────────────────────────────────────────
 
 async function cmdOauthAppRead(options) {
@@ -1571,7 +1611,7 @@ const program = new Command();
 program
   .name('openproject')
   .description('OpenClaw OpenProject Skill — project management via API v3')
-  .version('1.12.0');
+  .version('1.13.0');
 
 // Work Packages
 program.command('wp-list').description('List work packages')
@@ -1704,6 +1744,14 @@ program.command('user-read').description('Read user details')
 
 program.command('user-me').description('Show current authenticated user')
   .action(wrap(cmdUserMe));
+
+// Configuration
+program.command('config-read').description('View instance configuration')
+  .action(wrap(cmdConfigRead));
+
+program.command('project-config-read').description('View project configuration')
+  .option('-p, --project <id>', 'Project identifier')
+  .action(wrap(cmdProjectConfigRead));
 
 // OAuth
 program.command('oauth-app-read').description('Read an OAuth application')
