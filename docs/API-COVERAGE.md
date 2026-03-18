@@ -2,7 +2,7 @@
 
 This document lists all 55 API v3 resources, what this skill covers, and what's excluded with reasons.
 
-## ✅ Covered (17 resources)
+## ✅ Covered (18 resources)
 
 | Resource | Commands | Notes |
 |----------|----------|-------|
@@ -13,6 +13,7 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 | `time_entries` | time-list, time-create, time-update, time-delete | Full CRUD |
 | `users` | user-list, user-read, user-me | List/search users, view details, current user |
 | `notifications` | notification-list, notification-read, notification-mark-read, notification-mark-unread | List/read/mark with reason/project/WP filters |
+| `watchers` | watcher-list, watcher-add, watcher-remove, watcher-available | List, add, remove watchers on WPs |
 | `relations` | relation-list, relation-read, relation-create, relation-update, relation-delete | Full CRUD with type/WP filters |
 | `wiki_pages` | wiki-read, wiki-attachment-list, wiki-attachment-add | Read page, list & upload attachments |
 | `statuses` | status-list | List all statuses; transitions via wp-update --status |

@@ -1,6 +1,6 @@
 ---
 name: openproject-by-altf1be
-description: "OpenProject CRUD skill — manage work packages, projects, users, relations, notifications, time entries, comments, attachments, wiki pages, statuses, and more via OpenProject API v3 with API token auth. Supports cloud and self-hosted instances."
+description: "OpenProject CRUD skill — manage work packages, projects, users, watchers, relations, notifications, time entries, comments, attachments, wiki pages, statuses, and more via OpenProject API v3 with API token auth. Supports cloud and self-hosted instances."
 homepage: https://github.com/ALT-F1-OpenClaw/openclaw-skill-openproject
 metadata:
   {"openclaw": {"emoji": "📊", "requires": {"env": ["OP_HOST", "OP_API_TOKEN"]}, "optional": {"env": ["OP_DEFAULT_PROJECT", "OP_MAX_RESULTS", "OP_MAX_FILE_SIZE"]}, "primaryEnv": "OP_HOST"}}
@@ -8,7 +8,7 @@ metadata:
 
 # OpenProject by @altf1be
 
-Manage OpenProject work packages, projects, users, relations, notifications, time entries, comments, attachments, wiki pages, and workflow transitions via the API v3. Works with both cloud and self-hosted instances.
+Manage OpenProject work packages, projects, users, watchers, relations, notifications, time entries, comments, attachments, wiki pages, and workflow transitions via the API v3. Works with both cloud and self-hosted instances.
 
 ## Setup
 
@@ -141,6 +141,22 @@ node {baseDir}/scripts/openproject.mjs notification-mark-read --all --project 5
 # Mark as unread
 node {baseDir}/scripts/openproject.mjs notification-mark-unread --id 100
 node {baseDir}/scripts/openproject.mjs notification-mark-unread --all
+```
+
+### Watchers
+
+```bash
+# List watchers on a work package
+node {baseDir}/scripts/openproject.mjs watcher-list --wp-id 42
+
+# Add a watcher
+node {baseDir}/scripts/openproject.mjs watcher-add --wp-id 42 --user-id 5
+
+# Remove a watcher
+node {baseDir}/scripts/openproject.mjs watcher-remove --wp-id 42 --user-id 5
+
+# List users available as watchers
+node {baseDir}/scripts/openproject.mjs watcher-available --wp-id 42
 ```
 
 ### Relations

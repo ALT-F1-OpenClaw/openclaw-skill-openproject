@@ -717,6 +717,78 @@ async function cmdCategoryList(options) {
   console.log(`\n${resp._embedded.elements.length} category/categories`);
 }
 
+// ── Watcher commands ─────────────────────────────────────────────────────────
+
+async function cmdWatcherList(options) {
+  if (!options.wpId) {
+    console.error('ERROR: --wp-id is required');
+    process.exit(1);
+  }
+
+  const resp = await opFetch(`/work_packages/${options.wpId}/watchers`);
+
+  if (!resp._embedded.elements.length) {
+    console.log('No watchers on this work package.');
+    return;
+  }
+
+  for (const u of resp._embedded.elements) {
+    const login = u.login ? ` (${u.login})` : '';
+    const email = u.email ? `  ${u.email}` : '';
+    console.log(`  👁️  ID: ${String(u.id).padEnd(6)}  ${u.name}${login}${email}`);
+  }
+  console.log(`\n${resp._embedded.elements.length} watcher(s)`);
+}
+
+async function cmdWatcherAdd(options) {
+  if (!options.wpId || !options.userId) {
+    console.error('ERROR: --wp-id and --user-id are required');
+    process.exit(1);
+  }
+
+  await opFetch(`/work_packages/${options.wpId}/watchers`, {
+    method: 'POST',
+    body: JSON.stringify({
+      user: { href: `/api/v3/users/${options.userId}` },
+    }),
+  });
+
+  console.log(`✅ User #${options.userId} added as watcher on WP#${options.wpId}`);
+}
+
+async function cmdWatcherRemove(options) {
+  if (!options.wpId || !options.userId) {
+    console.error('ERROR: --wp-id and --user-id are required');
+    process.exit(1);
+  }
+
+  await opFetch(`/work_packages/${options.wpId}/watchers/${options.userId}`, {
+    method: 'DELETE',
+  });
+
+  console.log(`✅ User #${options.userId} removed as watcher from WP#${options.wpId}`);
+}
+
+async function cmdWatcherAvailable(options) {
+  if (!options.wpId) {
+    console.error('ERROR: --wp-id is required');
+    process.exit(1);
+  }
+
+  const resp = await opFetch(`/work_packages/${options.wpId}/available_watchers`);
+
+  if (!resp._embedded.elements.length) {
+    console.log('No available watchers.');
+    return;
+  }
+
+  for (const u of resp._embedded.elements) {
+    const login = u.login ? ` (${u.login})` : '';
+    console.log(`  👤  ID: ${String(u.id).padEnd(6)}  ${u.name}${login}`);
+  }
+  console.log(`\n${resp._embedded.elements.length} available watcher(s)`);
+}
+
 // ── Notification commands ────────────────────────────────────────────────────
 
 function reasonEmoji(reason) {
@@ -1117,7 +1189,7 @@ const program = new Command();
 program
   .name('openproject')
   .description('OpenClaw OpenProject Skill — project management via API v3')
-  .version('1.5.0');
+  .version('1.6.0');
 
 // Work Packages
 program.command('wp-list').description('List work packages')
@@ -1250,6 +1322,25 @@ program.command('user-read').description('Read user details')
 
 program.command('user-me').description('Show current authenticated user')
   .action(wrap(cmdUserMe));
+
+// Watchers
+program.command('watcher-list').description('List watchers on a work package')
+  .requiredOption('--wp-id <id>', 'Work package ID')
+  .action(wrap(cmdWatcherList));
+
+program.command('watcher-add').description('Add a watcher to a work package')
+  .requiredOption('--wp-id <id>', 'Work package ID')
+  .requiredOption('--user-id <id>', 'User ID to add as watcher')
+  .action(wrap(cmdWatcherAdd));
+
+program.command('watcher-remove').description('Remove a watcher from a work package')
+  .requiredOption('--wp-id <id>', 'Work package ID')
+  .requiredOption('--user-id <id>', 'User ID to remove')
+  .action(wrap(cmdWatcherRemove));
+
+program.command('watcher-available').description('List users available as watchers')
+  .requiredOption('--wp-id <id>', 'Work package ID')
+  .action(wrap(cmdWatcherAvailable));
 
 // Notifications
 program.command('notification-list').description('List notifications')
