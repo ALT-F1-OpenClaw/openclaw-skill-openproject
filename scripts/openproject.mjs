@@ -717,6 +717,51 @@ async function cmdCategoryList(options) {
   console.log(`\n${resp._embedded.elements.length} category/categories`);
 }
 
+// ── Budget commands (Enterprise) ─────────────────────────────────────────────
+
+async function cmdBudgetRead(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+
+  const b = await opFetch(`/budgets/${options.id}`);
+
+  console.log(`💰 Budget #${b.id}: ${b.subject || '?'}`);
+  console.log(`   Project:     ${halLink(b, 'project')}`);
+  if (b.spent !== undefined) console.log(`   Spent:       ${b.spent}`);
+  if (b.laborBudget !== undefined) console.log(`   Labor:       ${b.laborBudget}`);
+  if (b.materialBudget !== undefined) console.log(`   Material:    ${b.materialBudget}`);
+  if (b.overallCosts !== undefined) console.log(`   Overall:     ${b.overallCosts}`);
+  console.log(`   Created:     ${b.createdAt?.substring(0, 10) || '?'}`);
+  console.log(`   Updated:     ${b.updatedAt?.substring(0, 10) || '?'}`);
+
+  if (b.description?.raw) {
+    console.log(`\n📝 Description:\n${b.description.raw}`);
+  }
+}
+
+async function cmdBudgetList(options) {
+  const project = options.project || CFG.defaultProject;
+  if (!project) {
+    console.error('ERROR: --project is required (or set OP_DEFAULT_PROJECT)');
+    process.exit(1);
+  }
+
+  const resp = await opFetch(`/projects/${project}/budgets`);
+
+  if (!resp._embedded.elements.length) {
+    console.log('No budgets found.');
+    return;
+  }
+
+  for (const b of resp._embedded.elements) {
+    const spent = b.spent !== undefined ? `spent: ${b.spent}` : '';
+    console.log(`  💰  #${String(b.id).padEnd(6)}  ${(b.subject || '?').padEnd(30)}  ${spent}`);
+  }
+  console.log(`\n${resp._embedded.elements.length} budget(s)`);
+}
+
 // ── Meeting commands (Enterprise) ────────────────────────────────────────────
 
 async function cmdMeetingRead(options) {
@@ -1782,7 +1827,7 @@ const program = new Command();
 program
   .name('openproject')
   .description('OpenClaw OpenProject Skill — project management via API v3')
-  .version('1.15.0');
+  .version('1.16.0');
 
 // Work Packages
 program.command('wp-list').description('List work packages')
@@ -1915,6 +1960,15 @@ program.command('user-read').description('Read user details')
 
 program.command('user-me').description('Show current authenticated user')
   .action(wrap(cmdUserMe));
+
+// Budgets (Enterprise)
+program.command('budget-read').description('Read a budget (Enterprise)')
+  .requiredOption('--id <id>', 'Budget ID')
+  .action(wrap(cmdBudgetRead));
+
+program.command('budget-list').description('List project budgets (Enterprise)')
+  .option('-p, --project <id>', 'Project identifier')
+  .action(wrap(cmdBudgetList));
 
 // Meetings (Enterprise)
 program.command('meeting-read').description('Read a meeting (Enterprise)')
