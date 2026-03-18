@@ -143,6 +143,25 @@ node {baseDir}/scripts/openproject.mjs notification-mark-unread --id 100
 node {baseDir}/scripts/openproject.mjs notification-mark-unread --all
 ```
 
+### Placeholder Users (Enterprise)
+
+```bash
+# List placeholder users
+node {baseDir}/scripts/openproject.mjs placeholder-user-list
+
+# Read a placeholder user
+node {baseDir}/scripts/openproject.mjs placeholder-user-read --id 10
+
+# Create a placeholder user
+node {baseDir}/scripts/openproject.mjs placeholder-user-create --name "Future Developer"
+
+# Update a placeholder user
+node {baseDir}/scripts/openproject.mjs placeholder-user-update --id 10 --name "Senior Developer"
+
+# Delete a placeholder user (requires --confirm)
+node {baseDir}/scripts/openproject.mjs placeholder-user-delete --id 10 --confirm
+```
+
 ### Budgets (Enterprise)
 
 ```bash

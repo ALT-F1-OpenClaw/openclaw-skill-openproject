@@ -717,6 +717,83 @@ async function cmdCategoryList(options) {
   console.log(`\n${resp._embedded.elements.length} category/categories`);
 }
 
+// ── Placeholder User commands (Enterprise) ──────────────────────────────────
+
+async function cmdPlaceholderUserList() {
+  const resp = await opFetch(`/placeholder_users?pageSize=${CFG.maxResults}`);
+
+  if (!resp._embedded.elements.length) {
+    console.log('No placeholder users found.');
+    return;
+  }
+
+  for (const u of resp._embedded.elements) {
+    const status = u.status || '?';
+    console.log(`  👻  ID: ${String(u.id).padEnd(6)}  ${u.name.padEnd(25)}  [${status}]`);
+  }
+  console.log(`\n${resp._embedded.elements.length} placeholder user(s)`);
+}
+
+async function cmdPlaceholderUserRead(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+
+  const u = await opFetch(`/placeholder_users/${options.id}`);
+
+  console.log(`👻 Placeholder User #${u.id}: ${u.name}`);
+  console.log(`   Status:      ${u.status || '?'}`);
+  console.log(`   Created:     ${u.createdAt?.substring(0, 10) || '?'}`);
+  console.log(`   Updated:     ${u.updatedAt?.substring(0, 10) || '?'}`);
+}
+
+async function cmdPlaceholderUserCreate(options) {
+  if (!options.name) {
+    console.error('ERROR: --name is required');
+    process.exit(1);
+  }
+
+  const result = await opFetch('/placeholder_users', {
+    method: 'POST',
+    body: JSON.stringify({ name: options.name }),
+  });
+
+  console.log(`✅ Placeholder user created: ${result.name}`);
+  console.log(`   ID: ${result.id}`);
+}
+
+async function cmdPlaceholderUserUpdate(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+
+  const payload = {};
+  if (options.name) payload.name = options.name;
+
+  await opFetch(`/placeholder_users/${options.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+
+  console.log(`✅ Placeholder user #${options.id} updated`);
+}
+
+async function cmdPlaceholderUserDelete(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+  if (!options.confirm) {
+    console.error('ERROR: Delete requires --confirm flag for safety');
+    process.exit(1);
+  }
+
+  await opFetch(`/placeholder_users/${options.id}`, { method: 'DELETE' });
+  console.log(`✅ Placeholder user #${options.id} deleted`);
+}
+
 // ── Budget commands (Enterprise) ─────────────────────────────────────────────
 
 async function cmdBudgetRead(options) {
@@ -1827,7 +1904,7 @@ const program = new Command();
 program
   .name('openproject')
   .description('OpenClaw OpenProject Skill — project management via API v3')
-  .version('1.16.0');
+  .version('1.17.0');
 
 // Work Packages
 program.command('wp-list').description('List work packages')
@@ -1960,6 +2037,28 @@ program.command('user-read').description('Read user details')
 
 program.command('user-me').description('Show current authenticated user')
   .action(wrap(cmdUserMe));
+
+// Placeholder Users (Enterprise)
+program.command('placeholder-user-list').description('List placeholder users (Enterprise)')
+  .action(wrap(cmdPlaceholderUserList));
+
+program.command('placeholder-user-read').description('Read a placeholder user (Enterprise)')
+  .requiredOption('--id <id>', 'Placeholder user ID')
+  .action(wrap(cmdPlaceholderUserRead));
+
+program.command('placeholder-user-create').description('Create a placeholder user (Enterprise)')
+  .requiredOption('-n, --name <name>', 'Placeholder name')
+  .action(wrap(cmdPlaceholderUserCreate));
+
+program.command('placeholder-user-update').description('Update a placeholder user (Enterprise)')
+  .requiredOption('--id <id>', 'Placeholder user ID')
+  .option('-n, --name <name>', 'New name')
+  .action(wrap(cmdPlaceholderUserUpdate));
+
+program.command('placeholder-user-delete').description('Delete a placeholder user (Enterprise, requires --confirm)')
+  .requiredOption('--id <id>', 'Placeholder user ID')
+  .option('--confirm', 'Confirm deletion (required)')
+  .action(wrap(cmdPlaceholderUserDelete));
 
 // Budgets (Enterprise)
 program.command('budget-read').description('Read a budget (Enterprise)')
