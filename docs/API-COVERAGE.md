@@ -2,7 +2,7 @@
 
 This document lists all 55 API v3 resources, what this skill covers, and what's excluded with reasons.
 
-## ✅ Covered (28 resources)
+## ✅ Covered (29 resources)
 
 | Resource | Commands | Notes |
 |----------|----------|-------|
@@ -13,6 +13,7 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 | `time_entries` | time-list, time-create, time-update, time-delete | Full CRUD |
 | `users` | user-list, user-read, user-me | List/search users, view details, current user |
 | `notifications` | notification-list, notification-read, notification-mark-read, notification-mark-unread | List/read/mark with reason/project/WP filters |
+| `days` | day-read, days-list, non-working-days-list, non-working-day-read, week-days-list, week-day-read | Working/non-working days and week schedule |
 | `configuration` | config-read, project-config-read | Instance and project configuration |
 | `oauth_applications` | oauth-app-read | Read OAuth application details |
 | `oauth_client_credentials` | oauth-credentials-read | Read OAuth client credentials |
@@ -75,9 +76,6 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 
 ### Render (`/api/v3/render`)
 - **Reason:** Textile/Markdown rendering utility endpoint. Used internally by OpenProject editor.
-
-### Days (`/api/v3/days`)
-- **Reason:** Working days/non-working days configuration. Calendar configuration, admin-level.
 
 ### Posts (`/api/v3/posts`)
 - **Reason:** Forum posts. Limited API, legacy feature in OpenProject.

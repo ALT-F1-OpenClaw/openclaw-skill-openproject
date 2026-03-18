@@ -143,6 +143,28 @@ node {baseDir}/scripts/openproject.mjs notification-mark-unread --id 100
 node {baseDir}/scripts/openproject.mjs notification-mark-unread --all
 ```
 
+### Days (Working/Non-Working)
+
+```bash
+# Check if a date is a working day
+node {baseDir}/scripts/openproject.mjs day-read --date 2026-03-18
+
+# List days in a range
+node {baseDir}/scripts/openproject.mjs days-list --from 2026-03-01 --to 2026-03-31
+
+# List all non-working days (holidays)
+node {baseDir}/scripts/openproject.mjs non-working-days-list
+
+# View a non-working day
+node {baseDir}/scripts/openproject.mjs non-working-day-read --date 2026-12-25
+
+# Show week day schedule (which days are working)
+node {baseDir}/scripts/openproject.mjs week-days-list
+
+# View a specific week day
+node {baseDir}/scripts/openproject.mjs week-day-read --day 6
+```
+
 ### Configuration
 
 ```bash
