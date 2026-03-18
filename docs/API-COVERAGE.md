@@ -2,7 +2,7 @@
 
 This document lists all 55 API v3 resources, what this skill covers, and what's excluded with reasons.
 
-## ✅ Covered (24 resources)
+## ✅ Covered (25 resources)
 
 | Resource | Commands | Notes |
 |----------|----------|-------|
@@ -13,6 +13,7 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 | `time_entries` | time-list, time-create, time-update, time-delete | Full CRUD |
 | `users` | user-list, user-read, user-me | List/search users, view details, current user |
 | `notifications` | notification-list, notification-read, notification-mark-read, notification-mark-unread | List/read/mark with reason/project/WP filters |
+| `help_texts` | help-text-list, help-text-read | List and read attribute help texts |
 | `custom_fields` | custom-field-items | List hierarchical custom field items |
 | `custom_field_items` | custom-field-item-read, custom-field-item-branch | Read items and browse branches |
 | `custom_options` | custom-option-read | Read custom option values |
@@ -59,9 +60,6 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 
 ### Views (`/api/v3/views`)
 - **Reason:** Saved work package views (Gantt, board, etc.). Internal to OpenProject UI. No CLI equivalent.
-
-### Help Texts (`/api/v3/help_texts`)
-- **Reason:** Attribute help text configuration. Admin-only. No project management use case.
 
 ### Placeholder Users (`/api/v3/placeholder_users`)
 - **Reason:** Enterprise-only. Virtual users for resource planning before real users are assigned.

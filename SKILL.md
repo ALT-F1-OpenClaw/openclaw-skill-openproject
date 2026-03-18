@@ -143,6 +143,16 @@ node {baseDir}/scripts/openproject.mjs notification-mark-unread --id 100
 node {baseDir}/scripts/openproject.mjs notification-mark-unread --all
 ```
 
+### Help Texts
+
+```bash
+# List all attribute help texts
+node {baseDir}/scripts/openproject.mjs help-text-list
+
+# Read a help text
+node {baseDir}/scripts/openproject.mjs help-text-read --id 1
+```
+
 ### Custom Fields & Options
 
 ```bash
