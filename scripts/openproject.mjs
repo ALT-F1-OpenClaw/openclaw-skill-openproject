@@ -717,6 +717,96 @@ async function cmdCategoryList(options) {
   console.log(`\n${resp._embedded.elements.length} category/categories`);
 }
 
+// ── Days commands ────────────────────────────────────────────────────────────
+
+async function cmdDayRead(options) {
+  if (!options.date) {
+    console.error('ERROR: --date is required (YYYY-MM-DD)');
+    process.exit(1);
+  }
+
+  const d = await opFetch(`/days/${options.date}`);
+
+  const working = d.working ? '✅ Working day' : '❌ Non-working day';
+  console.log(`📅 ${d.date}: ${working}`);
+  if (d.name) console.log(`   Name: ${d.name}`);
+}
+
+async function cmdDaysList(options) {
+  const from = options.from || new Date().toISOString().substring(0, 10);
+  const to = options.to;
+
+  let url = `/days?filters=[{"date":{"operator":">d","values":["${from}"`;
+  if (to) url += `,"${to}"`;
+  url += ']}}]&pageSize=31';
+
+  const resp = await opFetch(url);
+
+  if (!resp._embedded.elements.length) {
+    console.log('No days found in range.');
+    return;
+  }
+
+  for (const d of resp._embedded.elements) {
+    const working = d.working ? '✅' : '❌';
+    const name = d.name ? `  (${d.name})` : '';
+    console.log(`  ${working}  ${d.date}${name}`);
+  }
+  console.log(`\n${resp._embedded.elements.length} day(s)`);
+}
+
+async function cmdNonWorkingDaysList() {
+  const resp = await opFetch(`/days/non_working?pageSize=${CFG.maxResults}`);
+
+  if (!resp._embedded.elements.length) {
+    console.log('No non-working days configured.');
+    return;
+  }
+
+  for (const d of resp._embedded.elements) {
+    const name = d.name || '';
+    console.log(`  🚫  ${d.date}  ${name}`);
+  }
+  console.log(`\n${resp._embedded.elements.length} non-working day(s)`);
+}
+
+async function cmdNonWorkingDayRead(options) {
+  if (!options.date) {
+    console.error('ERROR: --date is required (YYYY-MM-DD)');
+    process.exit(1);
+  }
+
+  const d = await opFetch(`/days/non_working/${options.date}`);
+
+  console.log(`🚫 Non-Working Day: ${d.date}`);
+  if (d.name) console.log(`   Name: ${d.name}`);
+}
+
+async function cmdWeekDaysList() {
+  const resp = await opFetch('/days/week');
+
+  for (const d of resp._embedded.elements) {
+    const working = d.working ? '✅' : '❌';
+    const dayNames = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const name = dayNames[d.day] || `Day ${d.day}`;
+    console.log(`  ${working}  ${name} (${d.day})`);
+  }
+}
+
+async function cmdWeekDayRead(options) {
+  if (!options.day) {
+    console.error('ERROR: --day is required (1=Monday ... 7=Sunday)');
+    process.exit(1);
+  }
+
+  const d = await opFetch(`/days/week/${options.day}`);
+
+  const working = d.working ? '✅ Working day' : '❌ Non-working day';
+  const dayNames = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const name = dayNames[d.day] || `Day ${d.day}`;
+  console.log(`📅 ${name}: ${working}`);
+}
+
 // ── Configuration commands ───────────────────────────────────────────────────
 
 async function cmdConfigRead() {
@@ -1611,7 +1701,7 @@ const program = new Command();
 program
   .name('openproject')
   .description('OpenClaw OpenProject Skill — project management via API v3')
-  .version('1.13.0');
+  .version('1.14.0');
 
 // Work Packages
 program.command('wp-list').description('List work packages')
@@ -1744,6 +1834,30 @@ program.command('user-read').description('Read user details')
 
 program.command('user-me').description('Show current authenticated user')
   .action(wrap(cmdUserMe));
+
+// Days
+program.command('day-read').description('Check if a date is a working day')
+  .requiredOption('--date <YYYY-MM-DD>', 'Date to check')
+  .action(wrap(cmdDayRead));
+
+program.command('days-list').description('List days in a date range')
+  .option('--from <YYYY-MM-DD>', 'Start date (default: today)')
+  .option('--to <YYYY-MM-DD>', 'End date')
+  .action(wrap(cmdDaysList));
+
+program.command('non-working-days-list').description('List all non-working days')
+  .action(wrap(cmdNonWorkingDaysList));
+
+program.command('non-working-day-read').description('View a non-working day')
+  .requiredOption('--date <YYYY-MM-DD>', 'Date')
+  .action(wrap(cmdNonWorkingDayRead));
+
+program.command('week-days-list').description('List week day configuration (working/non-working)')
+  .action(wrap(cmdWeekDaysList));
+
+program.command('week-day-read').description('View a week day configuration')
+  .requiredOption('--day <1-7>', 'Day number (1=Monday, 7=Sunday)')
+  .action(wrap(cmdWeekDayRead));
 
 // Configuration
 program.command('config-read').description('View instance configuration')
