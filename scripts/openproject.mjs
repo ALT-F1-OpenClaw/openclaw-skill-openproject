@@ -717,6 +717,52 @@ async function cmdCategoryList(options) {
   console.log(`\n${resp._embedded.elements.length} category/categories`);
 }
 
+// ── Project Phase commands (Enterprise) ──────────────────────────────────────
+
+async function cmdProjectPhaseDefinitionList() {
+  const resp = await opFetch('/project_phase_definitions');
+
+  if (!resp._embedded.elements.length) {
+    console.log('No project phase definitions found.');
+    return;
+  }
+
+  for (const d of resp._embedded.elements) {
+    const color = d.color || '';
+    console.log(`  🔄  ID: ${String(d.id).padEnd(6)}  ${(d.name || '?').padEnd(25)}  ${color}`);
+  }
+  console.log(`\n${resp._embedded.elements.length} phase definition(s)`);
+}
+
+async function cmdProjectPhaseDefinitionRead(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+
+  const d = await opFetch(`/project_phase_definitions/${options.id}`);
+
+  console.log(`🔄 Phase Definition #${d.id}: ${d.name || '?'}`);
+  if (d.color) console.log(`   Color:       ${d.color}`);
+  if (d.position !== undefined) console.log(`   Position:    ${d.position}`);
+}
+
+async function cmdProjectPhaseRead(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+
+  const p = await opFetch(`/project_phases/${options.id}`);
+
+  console.log(`🔄 Project Phase #${p.id}`);
+  console.log(`   Definition:  ${halLink(p, 'phaseDefinition') || '?'}`);
+  console.log(`   Project:     ${halLink(p, 'project') || '?'}`);
+  if (p.startDate) console.log(`   Start:       ${p.startDate}`);
+  if (p.endDate) console.log(`   End:         ${p.endDate}`);
+  console.log(`   Created:     ${p.createdAt?.substring(0, 10) || '?'}`);
+}
+
 // ── Portfolio commands (Enterprise) ──────────────────────────────────────────
 
 async function cmdPortfolioList() {
@@ -2028,7 +2074,7 @@ const program = new Command();
 program
   .name('openproject')
   .description('OpenClaw OpenProject Skill — project management via API v3')
-  .version('1.18.0');
+  .version('1.19.0');
 
 // Work Packages
 program.command('wp-list').description('List work packages')
@@ -2161,6 +2207,18 @@ program.command('user-read').description('Read user details')
 
 program.command('user-me').description('Show current authenticated user')
   .action(wrap(cmdUserMe));
+
+// Project Phases (Enterprise)
+program.command('project-phase-definition-list').description('List project phase definitions (Enterprise)')
+  .action(wrap(cmdProjectPhaseDefinitionList));
+
+program.command('project-phase-definition-read').description('Read a project phase definition (Enterprise)')
+  .requiredOption('--id <id>', 'Phase definition ID')
+  .action(wrap(cmdProjectPhaseDefinitionRead));
+
+program.command('project-phase-read').description('Read a project phase (Enterprise)')
+  .requiredOption('--id <id>', 'Project phase ID')
+  .action(wrap(cmdProjectPhaseRead));
 
 // Portfolios (Enterprise)
 program.command('portfolio-list').description('List portfolios (Enterprise)')
