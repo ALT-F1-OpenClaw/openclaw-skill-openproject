@@ -143,6 +143,22 @@ node {baseDir}/scripts/openproject.mjs notification-mark-unread --id 100
 node {baseDir}/scripts/openproject.mjs notification-mark-unread --all
 ```
 
+### Custom Fields & Options
+
+```bash
+# List items for a hierarchical custom field
+node {baseDir}/scripts/openproject.mjs custom-field-items --id 10
+
+# Read a custom field item
+node {baseDir}/scripts/openproject.mjs custom-field-item-read --id 25
+
+# Get a custom field item's branch (ancestors)
+node {baseDir}/scripts/openproject.mjs custom-field-item-branch --id 25
+
+# Read a custom option value
+node {baseDir}/scripts/openproject.mjs custom-option-read --id 3
+```
+
 ### Custom Actions
 
 ```bash

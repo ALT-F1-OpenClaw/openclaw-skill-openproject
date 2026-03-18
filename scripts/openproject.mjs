@@ -717,6 +717,75 @@ async function cmdCategoryList(options) {
   console.log(`\n${resp._embedded.elements.length} category/categories`);
 }
 
+// ── Custom Field commands ────────────────────────────────────────────────────
+
+async function cmdCustomFieldItems(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required (custom field ID)');
+    process.exit(1);
+  }
+
+  const resp = await opFetch(`/custom_fields/${options.id}/items`);
+
+  if (!resp._embedded?.elements?.length) {
+    console.log('No items found for this custom field.');
+    return;
+  }
+
+  for (const item of resp._embedded.elements) {
+    const indent = item._links?.parent?.href ? '  ' : '';
+    console.log(`${indent}  🏷️  ID: ${String(item.id).padEnd(6)}  ${item.value || item.name || '?'}`);
+  }
+  console.log(`\n${resp._embedded.elements.length} item(s)`);
+}
+
+async function cmdCustomFieldItemRead(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required (custom field item ID)');
+    process.exit(1);
+  }
+
+  const item = await opFetch(`/custom_field_items/${options.id}`);
+
+  console.log(`🏷️ Custom Field Item #${item.id}`);
+  console.log(`   Value:       ${item.value || item.name || '?'}`);
+  if (item._links?.parent?.href) {
+    const parentId = item._links.parent.href.split('/').pop();
+    console.log(`   Parent:      #${parentId}`);
+  }
+}
+
+async function cmdCustomFieldItemBranch(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required (custom field item ID)');
+    process.exit(1);
+  }
+
+  const resp = await opFetch(`/custom_field_items/${options.id}/branch`);
+
+  if (!resp._embedded?.elements?.length) {
+    console.log('No branch items found.');
+    return;
+  }
+
+  for (const item of resp._embedded.elements) {
+    console.log(`  🏷️  ID: ${String(item.id).padEnd(6)}  ${item.value || item.name || '?'}`);
+  }
+  console.log(`\n${resp._embedded.elements.length} item(s) in branch`);
+}
+
+async function cmdCustomOptionRead(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+
+  const opt = await opFetch(`/custom_options/${options.id}`);
+
+  console.log(`🔘 Custom Option #${opt.id}`);
+  console.log(`   Value:       ${opt.value || '?'}`);
+}
+
 // ── Custom Action commands ───────────────────────────────────────────────────
 
 async function cmdCustomActionRead(options) {
@@ -1434,7 +1503,7 @@ const program = new Command();
 program
   .name('openproject')
   .description('OpenClaw OpenProject Skill — project management via API v3')
-  .version('1.9.0');
+  .version('1.10.0');
 
 // Work Packages
 program.command('wp-list').description('List work packages')
@@ -1567,6 +1636,23 @@ program.command('user-read').description('Read user details')
 
 program.command('user-me').description('Show current authenticated user')
   .action(wrap(cmdUserMe));
+
+// Custom Fields & Options
+program.command('custom-field-items').description('List items for a hierarchical custom field')
+  .requiredOption('--id <id>', 'Custom field ID')
+  .action(wrap(cmdCustomFieldItems));
+
+program.command('custom-field-item-read').description('Read a custom field item')
+  .requiredOption('--id <id>', 'Custom field item ID')
+  .action(wrap(cmdCustomFieldItemRead));
+
+program.command('custom-field-item-branch').description('Get a custom field item branch (ancestors)')
+  .requiredOption('--id <id>', 'Custom field item ID')
+  .action(wrap(cmdCustomFieldItemBranch));
+
+program.command('custom-option-read').description('Read a custom option value')
+  .requiredOption('--id <id>', 'Custom option ID')
+  .action(wrap(cmdCustomOptionRead));
 
 // Custom Actions
 program.command('custom-action-read').description('Read a custom action')
