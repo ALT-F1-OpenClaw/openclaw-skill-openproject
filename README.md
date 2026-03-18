@@ -9,7 +9,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/ALT-F1-OpenClaw/openclaw-skill-openproject)](https://github.com/ALT-F1-OpenClaw/openclaw-skill-openproject/issues)
 [![GitHub stars](https://img.shields.io/github/stars/ALT-F1-OpenClaw/openclaw-skill-openproject)](https://github.com/ALT-F1-OpenClaw/openclaw-skill-openproject/stargazers)
 
-OpenClaw skill for OpenProject — CRUD work packages, projects, relations, time entries, comments, attachments, wiki pages, and more via OpenProject API v3. Supports both cloud and self-hosted instances.
+OpenClaw skill for OpenProject — CRUD work packages, projects, users, relations, time entries, comments, attachments, wiki pages, and more via OpenProject API v3. Supports both cloud and self-hosted instances.
 
 By [Abdelkrim BOUJRAF](https://www.alt-f1.be) / ALT-F1 SRL, Brussels 🇧🇪 🇲🇦
 
@@ -29,6 +29,7 @@ By [Abdelkrim BOUJRAF](https://www.alt-f1.be) / ALT-F1 SRL, Brussels 🇧🇪 �
 
 - **Work Packages** — Create, read, update, delete, list with filters (status, assignee, type)
 - **Projects** — List, read, create
+- **Users** — List, search, read user details, view current user
 - **Relations** — Create, read, update, delete relations between work packages (blocks, follows, precedes, etc.)
 - **Comments** — List and add comments on work packages
 - **Attachments** — List, upload, and delete
@@ -73,12 +74,13 @@ node scripts/openproject.mjs wp-create --project my-project --subject "My first 
 
 See [SKILL.md](./SKILL.md) for full command reference.
 
-### 35 commands across 9 entities:
+### 38 commands across 10 entities:
 
 | Entity | Commands |
 |--------|----------|
 | Work Packages | `wp-list`, `wp-create`, `wp-read`, `wp-update`, `wp-delete` |
 | Projects | `project-list`, `project-read`, `project-create` |
+| Users | `user-list`, `user-read`, `user-me` |
 | Relations | `relation-list`, `relation-read`, `relation-create`, `relation-update`, `relation-delete` |
 | Comments | `comment-list`, `comment-add` |
 | Attachments | `attachment-list`, `attachment-add`, `attachment-delete` |

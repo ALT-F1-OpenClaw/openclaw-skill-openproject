@@ -1,6 +1,6 @@
 ---
 name: openproject-by-altf1be
-description: "OpenProject CRUD skill — manage work packages, projects, relations, time entries, comments, attachments, wiki pages, statuses, and more via OpenProject API v3 with API token auth. Supports cloud and self-hosted instances."
+description: "OpenProject CRUD skill — manage work packages, projects, users, relations, time entries, comments, attachments, wiki pages, statuses, and more via OpenProject API v3 with API token auth. Supports cloud and self-hosted instances."
 homepage: https://github.com/ALT-F1-OpenClaw/openclaw-skill-openproject
 metadata:
   {"openclaw": {"emoji": "📊", "requires": {"env": ["OP_HOST", "OP_API_TOKEN"]}, "optional": {"env": ["OP_DEFAULT_PROJECT", "OP_MAX_RESULTS", "OP_MAX_FILE_SIZE"]}, "primaryEnv": "OP_HOST"}}
@@ -8,7 +8,7 @@ metadata:
 
 # OpenProject by @altf1be
 
-Manage OpenProject work packages, projects, relations, time entries, comments, attachments, wiki pages, and workflow transitions via the API v3. Works with both cloud and self-hosted instances.
+Manage OpenProject work packages, projects, users, relations, time entries, comments, attachments, wiki pages, and workflow transitions via the API v3. Works with both cloud and self-hosted instances.
 
 ## Setup
 
@@ -106,6 +106,20 @@ node {baseDir}/scripts/openproject.mjs status-list
 
 # Update work package status
 node {baseDir}/scripts/openproject.mjs wp-update --id 42 --status "In progress"
+```
+
+### Users
+
+```bash
+# List all users (with optional filters)
+node {baseDir}/scripts/openproject.mjs user-list
+node {baseDir}/scripts/openproject.mjs user-list --status active --name "John"
+
+# Read user details
+node {baseDir}/scripts/openproject.mjs user-read --id 5
+
+# Show current authenticated user
+node {baseDir}/scripts/openproject.mjs user-me
 ```
 
 ### Relations

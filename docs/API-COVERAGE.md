@@ -2,7 +2,7 @@
 
 This document lists all 55 API v3 resources, what this skill covers, and what's excluded with reasons.
 
-## ✅ Covered (15 resources)
+## ✅ Covered (16 resources)
 
 | Resource | Commands | Notes |
 |----------|----------|-------|
@@ -11,6 +11,7 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 | `activities` | comment-list, comment-add | Comments on work packages |
 | `attachments` | attachment-list, attachment-add, attachment-delete | Upload/delete on work packages |
 | `time_entries` | time-list, time-create, time-update, time-delete | Full CRUD |
+| `users` | user-list, user-read, user-me | List/search users, view details, current user |
 | `relations` | relation-list, relation-read, relation-create, relation-update, relation-delete | Full CRUD with type/WP filters |
 | `wiki_pages` | wiki-read, wiki-attachment-list, wiki-attachment-add | Read page, list & upload attachments |
 | `statuses` | status-list | List all statuses; transitions via wp-update --status |
@@ -47,9 +48,6 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 
 ### Groups (`/api/v3/groups`)
 - **Reason:** User group management. Admin-only operation. Low value for project management CLI.
-
-### Users (`/api/v3/users`)
-- **Reason:** Admin-only CRUD. Member-list covers project-level user visibility. Full user management is an admin task.
 
 ### File Links (`/api/v3/file_links`)
 - **Reason:** External storage integration (Nextcloud, OneDrive, SharePoint). Requires storage integration to be configured server-side.
@@ -121,8 +119,7 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 
 | Resource | Priority | Why |
 |----------|----------|-----|
-| Users | Medium | If user lookup/search is needed beyond member-list |
-| Notifications | Low | Could be useful for monitoring, but mostly a UI concern |
+| Notifications | Medium | Could be useful for monitoring, but mostly a UI concern |
 | News | Low | If write API becomes available |
 
 ## Enterprise-Only Features (Not Available on Community Edition)

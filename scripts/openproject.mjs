@@ -717,6 +717,77 @@ async function cmdCategoryList(options) {
   console.log(`\n${resp._embedded.elements.length} category/categories`);
 }
 
+// ── User commands ────────────────────────────────────────────────────────────
+
+async function cmdUserList(options) {
+  const filters = [];
+
+  if (options.status) {
+    const statusMap = {
+      active: '0', registered: '1', locked: '2', invited: '4',
+    };
+    const val = statusMap[options.status.toLowerCase()] || options.status;
+    filters.push({ status: { operator: '=', values: [val] } });
+  }
+  if (options.name) {
+    filters.push({ name: { operator: '~', values: [options.name] } });
+  }
+  if (options.group) {
+    filters.push({ group: { operator: '=', values: [options.group] } });
+  }
+
+  const filterParam = filters.length ? `&filters=${encodeURIComponent(JSON.stringify(filters))}` : '';
+  const resp = await opFetch(`/users?pageSize=${CFG.maxResults}${filterParam}&sortBy=[["name","asc"]]`);
+
+  if (!resp._embedded.elements.length) {
+    console.log('No users found.');
+    return;
+  }
+
+  for (const u of resp._embedded.elements) {
+    const status = u.status || '?';
+    const admin = u.admin ? ' 👑' : '';
+    const email = u.email ? `  ${u.email}` : '';
+    const login = u.login ? ` (${u.login})` : '';
+    console.log(`  👤  ID: ${String(u.id).padEnd(6)}  ${u.name || `${u.firstName} ${u.lastName}`}${login}${admin}  [${status}]${email}`);
+  }
+  console.log(`\n${resp._embedded.elements.length} of ${resp.total} user(s)`);
+}
+
+async function cmdUserRead(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required (numeric user ID or "me")');
+    process.exit(1);
+  }
+
+  const u = await opFetch(`/users/${options.id}`);
+
+  console.log(`👤 ${u.name || `${u.firstName} ${u.lastName}`}`);
+  console.log(`   ID:          ${u.id}`);
+  if (u.login) console.log(`   Login:       ${u.login}`);
+  if (u.email) console.log(`   Email:       ${u.email}`);
+  console.log(`   Status:      ${u.status || '?'}`);
+  console.log(`   Admin:       ${u.admin ? 'Yes' : 'No'}`);
+  if (u.language) console.log(`   Language:    ${u.language}`);
+  console.log(`   Created:     ${u.createdAt?.substring(0, 10) || '?'}`);
+  console.log(`   Updated:     ${u.updatedAt?.substring(0, 10) || '?'}`);
+  if (u.avatar) console.log(`   Avatar:      ${u.avatar}`);
+}
+
+async function cmdUserMe() {
+  const u = await opFetch('/users/me');
+
+  console.log(`👤 ${u.name || `${u.firstName} ${u.lastName}`}`);
+  console.log(`   ID:          ${u.id}`);
+  if (u.login) console.log(`   Login:       ${u.login}`);
+  if (u.email) console.log(`   Email:       ${u.email}`);
+  console.log(`   Status:      ${u.status || '?'}`);
+  console.log(`   Admin:       ${u.admin ? 'Yes' : 'No'}`);
+  if (u.language) console.log(`   Language:    ${u.language}`);
+  console.log(`   Created:     ${u.createdAt?.substring(0, 10) || '?'}`);
+  console.log(`   Updated:     ${u.updatedAt?.substring(0, 10) || '?'}`);
+}
+
 // ── Relation commands ────────────────────────────────────────────────────────
 
 const RELATION_TYPES = [
@@ -942,7 +1013,7 @@ const program = new Command();
 program
   .name('openproject')
   .description('OpenClaw OpenProject Skill — project management via API v3')
-  .version('1.3.0');
+  .version('1.4.0');
 
 // Work Packages
 program.command('wp-list').description('List work packages')
@@ -1061,6 +1132,20 @@ program.command('version-list').description('List project versions/milestones')
 program.command('category-list').description('List project categories')
   .option('-p, --project <id>', 'Project identifier')
   .action(wrap(cmdCategoryList));
+
+// Users
+program.command('user-list').description('List users')
+  .option('-s, --status <status>', 'Filter by status (active, registered, locked, invited)')
+  .option('-n, --name <text>', 'Search by name (partial match)')
+  .option('-g, --group <id>', 'Filter by group ID')
+  .action(wrap(cmdUserList));
+
+program.command('user-read').description('Read user details')
+  .requiredOption('--id <id>', 'User numeric ID')
+  .action(wrap(cmdUserRead));
+
+program.command('user-me').description('Show current authenticated user')
+  .action(wrap(cmdUserMe));
 
 // Relations
 program.command('relation-list').description('List relations')
