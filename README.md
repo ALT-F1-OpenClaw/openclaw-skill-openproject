@@ -30,6 +30,7 @@ By [Abdelkrim BOUJRAF](https://www.alt-f1.be) / ALT-F1 SRL, Brussels 🇧🇪 �
 - **Work Packages** — Create, read, update, delete, list with filters (status, assignee, type)
 - **Projects** — List, read, create
 - **Users** — List, search, read user details, view current user
+- **Meetings** — Read meetings, list/upload attachments (Enterprise)
 - **Days** — Working/non-working days, week schedule, holiday calendar
 - **Configuration** — View instance and project configuration
 - **OAuth** — Read OAuth applications and client credentials
@@ -84,13 +85,14 @@ node scripts/openproject.mjs wp-create --project my-project --subject "My first 
 
 See [SKILL.md](./SKILL.md) for full command reference.
 
-### 74 commands across 20 entities:
+### 77 commands across 21 entities:
 
 | Entity | Commands |
 |--------|----------|
 | Work Packages | `wp-list`, `wp-create`, `wp-read`, `wp-update`, `wp-delete` |
 | Projects | `project-list`, `project-read`, `project-create` |
 | Users | `user-list`, `user-read`, `user-me` |
+| Meetings 🏢 | `meeting-read`, `meeting-attachment-list`, `meeting-attachment-add` |
 | Days | `day-read`, `days-list`, `non-working-days-list`, `non-working-day-read`, `week-days-list`, `week-day-read` |
 | Configuration | `config-read`, `project-config-read` |
 | OAuth | `oauth-app-read`, `oauth-credentials-read` |
