@@ -2,7 +2,7 @@
 
 This document lists all 55 API v3 resources, what this skill covers, and what's excluded with reasons.
 
-## ✅ Covered (20 resources)
+## ✅ Covered (21 resources)
 
 | Resource | Commands | Notes |
 |----------|----------|-------|
@@ -13,6 +13,7 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 | `time_entries` | time-list, time-create, time-update, time-delete | Full CRUD |
 | `users` | user-list, user-read, user-me | List/search users, view details, current user |
 | `notifications` | notification-list, notification-read, notification-mark-read, notification-mark-unread | List/read/mark with reason/project/WP filters |
+| `custom_actions` | custom-action-read, custom-action-execute | Read and execute workflow actions on WPs |
 | `groups` | group-list, group-read, group-create, group-update, group-delete | Full CRUD with member management |
 | `news` | news-list, news-read, news-create, news-update, news-delete | Full CRUD for project announcements |
 | `watchers` | watcher-list, watcher-add, watcher-remove, watcher-available | List, add, remove watchers on WPs |
@@ -55,9 +56,6 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 
 ### Views (`/api/v3/views`)
 - **Reason:** Saved work package views (Gantt, board, etc.). Internal to OpenProject UI. No CLI equivalent.
-
-### Custom Actions (`/api/v3/custom_actions`)
-- **Reason:** Server-side workflow automation triggers. Read-only via API. Configured in admin settings.
 
 ### Custom Fields & Options (`/api/v3/custom_fields`, `/api/v3/custom_field_items`, `/api/v3/custom_options`)
 - **Reason:** Schema configuration for custom fields. Admin-only setup. Custom field *values* are handled via wp-create/wp-update.

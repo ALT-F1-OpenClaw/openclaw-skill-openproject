@@ -143,6 +143,16 @@ node {baseDir}/scripts/openproject.mjs notification-mark-unread --id 100
 node {baseDir}/scripts/openproject.mjs notification-mark-unread --all
 ```
 
+### Custom Actions
+
+```bash
+# Read a custom action
+node {baseDir}/scripts/openproject.mjs custom-action-read --id 1
+
+# Execute a custom action on a work package
+node {baseDir}/scripts/openproject.mjs custom-action-execute --id 1 --wp-id 42
+```
+
 ### Groups
 
 ```bash
