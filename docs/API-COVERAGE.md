@@ -2,7 +2,7 @@
 
 This document lists all 55 API v3 resources, what this skill covers, and what's excluded with reasons.
 
-## ✅ Covered (32 resources)
+## ✅ Covered (34 resources)
 
 | Resource | Commands | Notes |
 |----------|----------|-------|
@@ -13,6 +13,8 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 | `time_entries` | time-list, time-create, time-update, time-delete | Full CRUD |
 | `users` | user-list, user-read, user-me | List/search users, view details, current user |
 | `notifications` | notification-list, notification-read, notification-mark-read, notification-mark-unread | List/read/mark with reason/project/WP filters |
+| `portfolios` | portfolio-list, portfolio-read, portfolio-update, portfolio-delete | List, read, update, delete (Enterprise) |
+| `programs` | program-list, program-read, program-update, program-delete | List, read, update, delete (Enterprise) |
 | `placeholder_users` | placeholder-user-list, placeholder-user-read, placeholder-user-create, placeholder-user-update, placeholder-user-delete | Full CRUD (Enterprise) |
 | `budgets` | budget-list, budget-read | List and read project budgets (Enterprise) |
 | `meetings` | meeting-read, meeting-attachment-list, meeting-attachment-add | Read meetings, attachments (Enterprise) |
@@ -76,9 +78,6 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 
 ### Reminders (`/api/v3/reminders`)
 - **Reason:** User-specific notification reminders. Personal notification settings.
-
-### Portfolios & Programs (`/api/v3/portfolios`, `/api/v3/programs`)
-- **Reason:** Enterprise-only. Portfolio/program management for multi-project oversight.
 
 ### Project Phases & Definitions (`/api/v3/project_phases`, `/api/v3/project_phase_definitions`)
 - **Reason:** Enterprise-only. Project lifecycle phase tracking.

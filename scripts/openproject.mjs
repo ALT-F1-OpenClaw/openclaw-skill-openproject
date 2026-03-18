@@ -717,6 +717,130 @@ async function cmdCategoryList(options) {
   console.log(`\n${resp._embedded.elements.length} category/categories`);
 }
 
+// ── Portfolio commands (Enterprise) ──────────────────────────────────────────
+
+async function cmdPortfolioList() {
+  const resp = await opFetch(`/portfolios?pageSize=${CFG.maxResults}`);
+
+  if (!resp._embedded.elements.length) {
+    console.log('No portfolios found.');
+    return;
+  }
+
+  for (const p of resp._embedded.elements) {
+    console.log(`  📊  #${String(p.id).padEnd(6)}  ${p.name || p.title || '?'}`);
+  }
+  console.log(`\n${resp._embedded.elements.length} portfolio(s)`);
+}
+
+async function cmdPortfolioRead(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+
+  const p = await opFetch(`/portfolios/${options.id}`);
+
+  console.log(`📊 Portfolio #${p.id}: ${p.name || p.title || '?'}`);
+  if (p.description?.raw) console.log(`   Description: ${p.description.raw}`);
+  console.log(`   Created:     ${p.createdAt?.substring(0, 10) || '?'}`);
+  console.log(`   Updated:     ${p.updatedAt?.substring(0, 10) || '?'}`);
+}
+
+async function cmdPortfolioUpdate(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+
+  const payload = {};
+  if (options.name) payload.name = options.name;
+  if (options.description) payload.description = { format: 'markdown', raw: options.description };
+
+  await opFetch(`/portfolios/${options.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+
+  console.log(`✅ Portfolio #${options.id} updated`);
+}
+
+async function cmdPortfolioDelete(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+  if (!options.confirm) {
+    console.error('ERROR: Delete requires --confirm flag for safety');
+    process.exit(1);
+  }
+
+  await opFetch(`/portfolios/${options.id}`, { method: 'DELETE' });
+  console.log(`✅ Portfolio #${options.id} deleted`);
+}
+
+// ── Program commands (Enterprise) ───────────────────────────────────────────
+
+async function cmdProgramList() {
+  const resp = await opFetch(`/programs?pageSize=${CFG.maxResults}`);
+
+  if (!resp._embedded.elements.length) {
+    console.log('No programs found.');
+    return;
+  }
+
+  for (const p of resp._embedded.elements) {
+    console.log(`  🏗️  #${String(p.id).padEnd(6)}  ${p.name || p.title || '?'}`);
+  }
+  console.log(`\n${resp._embedded.elements.length} program(s)`);
+}
+
+async function cmdProgramRead(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+
+  const p = await opFetch(`/programs/${options.id}`);
+
+  console.log(`🏗️ Program #${p.id}: ${p.name || p.title || '?'}`);
+  if (p.description?.raw) console.log(`   Description: ${p.description.raw}`);
+  console.log(`   Created:     ${p.createdAt?.substring(0, 10) || '?'}`);
+  console.log(`   Updated:     ${p.updatedAt?.substring(0, 10) || '?'}`);
+}
+
+async function cmdProgramUpdate(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+
+  const payload = {};
+  if (options.name) payload.name = options.name;
+  if (options.description) payload.description = { format: 'markdown', raw: options.description };
+
+  await opFetch(`/programs/${options.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+
+  console.log(`✅ Program #${options.id} updated`);
+}
+
+async function cmdProgramDelete(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+  if (!options.confirm) {
+    console.error('ERROR: Delete requires --confirm flag for safety');
+    process.exit(1);
+  }
+
+  await opFetch(`/programs/${options.id}`, { method: 'DELETE' });
+  console.log(`✅ Program #${options.id} deleted`);
+}
+
 // ── Placeholder User commands (Enterprise) ──────────────────────────────────
 
 async function cmdPlaceholderUserList() {
@@ -1904,7 +2028,7 @@ const program = new Command();
 program
   .name('openproject')
   .description('OpenClaw OpenProject Skill — project management via API v3')
-  .version('1.17.0');
+  .version('1.18.0');
 
 // Work Packages
 program.command('wp-list').description('List work packages')
@@ -2037,6 +2161,44 @@ program.command('user-read').description('Read user details')
 
 program.command('user-me').description('Show current authenticated user')
   .action(wrap(cmdUserMe));
+
+// Portfolios (Enterprise)
+program.command('portfolio-list').description('List portfolios (Enterprise)')
+  .action(wrap(cmdPortfolioList));
+
+program.command('portfolio-read').description('Read a portfolio (Enterprise)')
+  .requiredOption('--id <id>', 'Portfolio ID')
+  .action(wrap(cmdPortfolioRead));
+
+program.command('portfolio-update').description('Update a portfolio (Enterprise)')
+  .requiredOption('--id <id>', 'Portfolio ID')
+  .option('-n, --name <name>', 'New name')
+  .option('-d, --description <text>', 'New description')
+  .action(wrap(cmdPortfolioUpdate));
+
+program.command('portfolio-delete').description('Delete a portfolio (Enterprise, requires --confirm)')
+  .requiredOption('--id <id>', 'Portfolio ID')
+  .option('--confirm', 'Confirm deletion (required)')
+  .action(wrap(cmdPortfolioDelete));
+
+// Programs (Enterprise)
+program.command('program-list').description('List programs (Enterprise)')
+  .action(wrap(cmdProgramList));
+
+program.command('program-read').description('Read a program (Enterprise)')
+  .requiredOption('--id <id>', 'Program ID')
+  .action(wrap(cmdProgramRead));
+
+program.command('program-update').description('Update a program (Enterprise)')
+  .requiredOption('--id <id>', 'Program ID')
+  .option('-n, --name <name>', 'New name')
+  .option('-d, --description <text>', 'New description')
+  .action(wrap(cmdProgramUpdate));
+
+program.command('program-delete').description('Delete a program (Enterprise, requires --confirm)')
+  .requiredOption('--id <id>', 'Program ID')
+  .option('--confirm', 'Confirm deletion (required)')
+  .action(wrap(cmdProgramDelete));
 
 // Placeholder Users (Enterprise)
 program.command('placeholder-user-list').description('List placeholder users (Enterprise)')
