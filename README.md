@@ -30,6 +30,7 @@ By [Abdelkrim BOUJRAF](https://www.alt-f1.be) / ALT-F1 SRL, Brussels 🇧🇪 �
 - **Work Packages** — Create, read, update, delete, list with filters (status, assignee, type)
 - **Projects** — List, read, create
 - **Users** — List, search, read user details, view current user
+- **Help Texts** — List and read attribute help texts
 - **Custom Fields & Options** — Browse hierarchical custom field items and option values
 - **Custom Actions** — Read and execute workflow automation actions on work packages
 - **Groups** — Full CRUD for user groups with member management
@@ -80,13 +81,14 @@ node scripts/openproject.mjs wp-create --project my-project --subject "My first 
 
 See [SKILL.md](./SKILL.md) for full command reference.
 
-### 62 commands across 16 entities:
+### 64 commands across 17 entities:
 
 | Entity | Commands |
 |--------|----------|
 | Work Packages | `wp-list`, `wp-create`, `wp-read`, `wp-update`, `wp-delete` |
 | Projects | `project-list`, `project-read`, `project-create` |
 | Users | `user-list`, `user-read`, `user-me` |
+| Help Texts | `help-text-list`, `help-text-read` |
 | Custom Fields | `custom-field-items`, `custom-field-item-read`, `custom-field-item-branch`, `custom-option-read` |
 | Custom Actions | `custom-action-read`, `custom-action-execute` |
 | Groups | `group-list`, `group-read`, `group-create`, `group-update`, `group-delete` |

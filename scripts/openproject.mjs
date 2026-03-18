@@ -717,6 +717,41 @@ async function cmdCategoryList(options) {
   console.log(`\n${resp._embedded.elements.length} category/categories`);
 }
 
+// ── Help Text commands ───────────────────────────────────────────────────────
+
+async function cmdHelpTextList() {
+  const resp = await opFetch('/help_texts');
+
+  if (!resp._embedded.elements.length) {
+    console.log('No help texts found.');
+    return;
+  }
+
+  for (const h of resp._embedded.elements) {
+    const attr = h.attribute || '?';
+    const text = h.helpText?.raw?.substring(0, 80) || '';
+    console.log(`  ❓  ID: ${String(h.id).padEnd(6)}  ${attr.padEnd(25)}  ${text}${text.length >= 80 ? '...' : ''}`);
+  }
+  console.log(`\n${resp._embedded.elements.length} help text(s)`);
+}
+
+async function cmdHelpTextRead(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+
+  const h = await opFetch(`/help_texts/${options.id}`);
+
+  console.log(`❓ Help Text #${h.id}`);
+  console.log(`   Attribute:   ${h.attribute || '?'}`);
+  console.log(`   Scope:       ${h.scope || '?'}`);
+
+  if (h.helpText?.raw) {
+    console.log(`\n📝 Text:\n${h.helpText.raw}`);
+  }
+}
+
 // ── Custom Field commands ────────────────────────────────────────────────────
 
 async function cmdCustomFieldItems(options) {
@@ -1503,7 +1538,7 @@ const program = new Command();
 program
   .name('openproject')
   .description('OpenClaw OpenProject Skill — project management via API v3')
-  .version('1.10.0');
+  .version('1.11.0');
 
 // Work Packages
 program.command('wp-list').description('List work packages')
@@ -1636,6 +1671,14 @@ program.command('user-read').description('Read user details')
 
 program.command('user-me').description('Show current authenticated user')
   .action(wrap(cmdUserMe));
+
+// Help Texts
+program.command('help-text-list').description('List attribute help texts')
+  .action(wrap(cmdHelpTextList));
+
+program.command('help-text-read').description('Read a help text')
+  .requiredOption('--id <id>', 'Help text ID')
+  .action(wrap(cmdHelpTextRead));
 
 // Custom Fields & Options
 program.command('custom-field-items').description('List items for a hierarchical custom field')
