@@ -1,6 +1,6 @@
 {
   "name": "openclaw-skill-openproject",
-  "version": "1.19.0",
+  "version": "2.0.0",
   "description": "OpenClaw skill for OpenProject — CRUD work packages, projects, time entries, comments, attachments, and more via OpenProject API v3",
   "type": "module",
   "bin": {

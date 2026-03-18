@@ -717,6 +717,229 @@ async function cmdCategoryList(options) {
   console.log(`\n${resp._embedded.elements.length} category/categories`);
 }
 
+// ── Document commands ────────────────────────────────────────────────────────
+
+async function cmdDocumentList() {
+  const resp = await opFetch(`/documents?pageSize=${CFG.maxResults}`);
+  if (!resp._embedded.elements.length) { console.log('No documents found.'); return; }
+  for (const d of resp._embedded.elements) {
+    const project = halLink(d, 'project');
+    const created = d.createdAt?.substring(0, 10) || '?';
+    console.log(`  📄  #${String(d.id).padEnd(6)}  ${(d.title || '?').padEnd(30)}  ${project}  ${created}`);
+  }
+  console.log(`\n${resp._embedded.elements.length} document(s)`);
+}
+
+async function cmdDocumentRead(options) {
+  if (!options.id) { console.error('ERROR: --id is required'); process.exit(1); }
+  const d = await opFetch(`/documents/${options.id}`);
+  console.log(`📄 Document #${d.id}: ${d.title || '?'}`);
+  console.log(`   Project:     ${halLink(d, 'project')}`);
+  console.log(`   Created:     ${d.createdAt?.substring(0, 10) || '?'}`);
+  console.log(`   Updated:     ${d.updatedAt?.substring(0, 10) || '?'}`);
+  if (d.description?.raw) console.log(`\n📝 Description:\n${d.description.raw}`);
+}
+
+async function cmdDocumentUpdate(options) {
+  if (!options.id) { console.error('ERROR: --id is required'); process.exit(1); }
+  const payload = {};
+  if (options.title) payload.title = options.title;
+  if (options.description) payload.description = { format: 'markdown', raw: options.description };
+  await opFetch(`/documents/${options.id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+  console.log(`✅ Document #${options.id} updated`);
+}
+
+// ── Revision commands ────────────────────────────────────────────────────────
+
+async function cmdRevisionRead(options) {
+  if (!options.id) { console.error('ERROR: --id is required'); process.exit(1); }
+  const r = await opFetch(`/revisions/${options.id}`);
+  console.log(`🔀 Revision #${r.id}`);
+  console.log(`   Identifier:  ${r.identifier || '?'}`);
+  if (r.message?.raw) console.log(`   Message:     ${r.message.raw}`);
+  console.log(`   Author:      ${halLink(r, 'author')}`);
+  console.log(`   Created:     ${r.createdAt?.substring(0, 10) || '?'}`);
+}
+
+async function cmdRevisionListByWp(options) {
+  if (!options.wpId) { console.error('ERROR: --wp-id is required'); process.exit(1); }
+  const resp = await opFetch(`/work_packages/${options.wpId}/revisions`);
+  if (!resp._embedded.elements.length) { console.log('No revisions found.'); return; }
+  for (const r of resp._embedded.elements) {
+    const msg = r.message?.raw?.substring(0, 60) || '';
+    console.log(`  🔀  #${String(r.id).padEnd(6)}  ${(r.identifier || '?').padEnd(12)}  ${msg}`);
+  }
+  console.log(`\n${resp._embedded.elements.length} revision(s)`);
+}
+
+// ── Capability & Action commands ─────────────────────────────────────────────
+
+async function cmdCapabilityList(options) {
+  const filters = [];
+  if (options.context) filters.push({ context: { operator: '=', values: [options.context] } });
+  if (options.action) filters.push({ action: { operator: '=', values: [options.action] } });
+  if (options.principal) filters.push({ principal: { operator: '=', values: [options.principal] } });
+  const filterParam = filters.length ? `&filters=${encodeURIComponent(JSON.stringify(filters))}` : '';
+  const resp = await opFetch(`/capabilities?pageSize=${CFG.maxResults}${filterParam}`);
+  if (!resp._embedded.elements.length) { console.log('No capabilities found.'); return; }
+  for (const c of resp._embedded.elements) {
+    const action = halLink(c, 'action') || '?';
+    const context = halLink(c, 'context') || 'global';
+    const principal = halLink(c, 'principal') || '?';
+    console.log(`  🔑  ${String(c.id).padEnd(30)}  ${action.padEnd(25)}  ${context.padEnd(20)}  ${principal}`);
+  }
+  console.log(`\n${resp._embedded.elements.length} of ${resp.total} capability/capabilities`);
+}
+
+async function cmdCapabilityGlobal() {
+  const resp = await opFetch('/capabilities/context/global');
+  if (!resp._embedded.elements.length) { console.log('No global capabilities.'); return; }
+  for (const c of resp._embedded.elements) {
+    const action = halLink(c, 'action') || '?';
+    console.log(`  🔑  ${action}`);
+  }
+  console.log(`\n${resp._embedded.elements.length} global capability/capabilities`);
+}
+
+async function cmdActionList() {
+  const resp = await opFetch('/actions');
+  if (!resp._embedded.elements.length) { console.log('No actions found.'); return; }
+  for (const a of resp._embedded.elements) {
+    console.log(`  ⚡  ${a.id}`);
+  }
+  console.log(`\n${resp._embedded.elements.length} action(s)`);
+}
+
+async function cmdActionRead(options) {
+  if (!options.id) { console.error('ERROR: --id is required'); process.exit(1); }
+  const a = await opFetch(`/actions/${options.id}`);
+  console.log(`⚡ Action: ${a.id}`);
+}
+
+// ── My Preferences commands ──────────────────────────────────────────────────
+
+async function cmdMyPreferencesRead() {
+  const p = await opFetch('/my_preferences');
+  console.log('⚙️ My Preferences');
+  const skip = ['_type', '_links'];
+  for (const [key, val] of Object.entries(p)) {
+    if (skip.includes(key)) continue;
+    const display = typeof val === 'object' ? JSON.stringify(val) : val;
+    console.log(`   ${key}: ${display}`);
+  }
+}
+
+async function cmdMyPreferencesUpdate(options) {
+  const payload = {};
+  if (options.timeZone) payload.timeZone = options.timeZone;
+  if (options.autoHidePopups !== undefined) payload.autoHidePopups = options.autoHidePopups === 'true';
+  if (options.commentOrder) payload.commentSortDescending = options.commentOrder === 'desc';
+  if (options.warnOnLeavingUnsaved !== undefined) payload.warnOnLeavingUnsaved = options.warnOnLeavingUnsaved === 'true';
+  await opFetch('/my_preferences', { method: 'PATCH', body: JSON.stringify(payload) });
+  console.log('✅ Preferences updated');
+}
+
+// ── Render commands ──────────────────────────────────────────────────────────
+
+async function cmdRenderMarkdown(options) {
+  if (!options.text) { console.error('ERROR: --text is required'); process.exit(1); }
+  const result = await opFetch('/render/markdown', {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: options.text,
+  });
+  console.log(typeof result === 'string' ? result : result?.html || JSON.stringify(result));
+}
+
+async function cmdRenderPlain(options) {
+  if (!options.text) { console.error('ERROR: --text is required'); process.exit(1); }
+  const result = await opFetch('/render/plain', {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: options.text,
+  });
+  console.log(typeof result === 'string' ? result : result?.html || JSON.stringify(result));
+}
+
+// ── Post commands ────────────────────────────────────────────────────────────
+
+async function cmdPostRead(options) {
+  if (!options.id) { console.error('ERROR: --id is required'); process.exit(1); }
+  const p = await opFetch(`/posts/${options.id}`);
+  console.log(`📝 Post #${p.id}: ${p.subject || '?'}`);
+  console.log(`   Author:      ${halLink(p, 'author')}`);
+  console.log(`   Project:     ${halLink(p, 'project')}`);
+  console.log(`   Created:     ${p.createdAt?.substring(0, 10) || '?'}`);
+  if (p.description?.raw) console.log(`\n${p.description.raw}`);
+}
+
+async function cmdPostAttachmentList(options) {
+  if (!options.id) { console.error('ERROR: --id is required'); process.exit(1); }
+  const resp = await opFetch(`/posts/${options.id}/attachments`);
+  if (!resp._embedded.elements.length) { console.log('No attachments.'); return; }
+  for (const a of resp._embedded.elements) {
+    const size = `${(a.fileSize / 1024).toFixed(1)} KB`;
+    console.log(`📎  #${String(a.id).padEnd(8)}  ${a.fileName.padEnd(30)}  ${size.padStart(12)}`);
+  }
+  console.log(`\n${resp._embedded.elements.length} attachment(s)`);
+}
+
+// ── Reminder commands ────────────────────────────────────────────────────────
+
+async function cmdReminderList() {
+  const resp = await opFetch(`/reminders?pageSize=${CFG.maxResults}`);
+  if (!resp._embedded.elements.length) { console.log('No reminders found.'); return; }
+  for (const r of resp._embedded.elements) {
+    const wp = halLink(r, 'workPackage') || '?';
+    const note = r.note || '';
+    console.log(`  ⏰  #${String(r.id).padEnd(6)}  WP: ${wp.padEnd(20)}  ${r.remindAt || '?'}  ${note.substring(0, 40)}`);
+  }
+  console.log(`\n${resp._embedded.elements.length} reminder(s)`);
+}
+
+async function cmdReminderCreate(options) {
+  if (!options.wpId || !options.remindAt) {
+    console.error('ERROR: --wp-id and --remind-at are required');
+    process.exit(1);
+  }
+  const payload = {
+    remindAt: options.remindAt,
+    note: options.note || null,
+  };
+  const result = await opFetch(`/work_packages/${options.wpId}/reminders`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  console.log(`✅ Reminder created for WP#${options.wpId}`);
+  console.log(`   ID: ${result.id}`);
+  console.log(`   Remind at: ${result.remindAt}`);
+}
+
+async function cmdReminderUpdate(options) {
+  if (!options.id) { console.error('ERROR: --id is required'); process.exit(1); }
+  const payload = {};
+  if (options.remindAt) payload.remindAt = options.remindAt;
+  if (options.note !== undefined) payload.note = options.note || null;
+  await opFetch(`/reminders/${options.id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+  console.log(`✅ Reminder #${options.id} updated`);
+}
+
+async function cmdReminderDelete(options) {
+  if (!options.id) { console.error('ERROR: --id is required'); process.exit(1); }
+  if (!options.confirm) { console.error('ERROR: Delete requires --confirm flag'); process.exit(1); }
+  await opFetch(`/reminders/${options.id}`, { method: 'DELETE' });
+  console.log(`✅ Reminder #${options.id} deleted`);
+}
+
+// ── Project Status commands ──────────────────────────────────────────────────
+
+async function cmdProjectStatusRead(options) {
+  if (!options.id) { console.error('ERROR: --id is required'); process.exit(1); }
+  const s = await opFetch(`/project_statuses/${options.id}`);
+  console.log(`🚦 Project Status: ${s.name || s.id}`);
+  if (s.color) console.log(`   Color: ${s.color}`);
+}
+
 // ── Project Phase commands (Enterprise) ──────────────────────────────────────
 
 async function cmdProjectPhaseDefinitionList() {
@@ -2074,7 +2297,7 @@ const program = new Command();
 program
   .name('openproject')
   .description('OpenClaw OpenProject Skill — project management via API v3')
-  .version('1.19.0');
+  .version('2.0.0');
 
 // Work Packages
 program.command('wp-list').description('List work packages')
@@ -2207,6 +2430,89 @@ program.command('user-read').description('Read user details')
 
 program.command('user-me').description('Show current authenticated user')
   .action(wrap(cmdUserMe));
+
+// Documents
+program.command('document-list').description('List documents')
+  .action(wrap(cmdDocumentList));
+program.command('document-read').description('Read a document')
+  .requiredOption('--id <id>', 'Document ID')
+  .action(wrap(cmdDocumentRead));
+program.command('document-update').description('Update a document')
+  .requiredOption('--id <id>', 'Document ID')
+  .option('--title <text>', 'New title')
+  .option('-d, --description <text>', 'New description')
+  .action(wrap(cmdDocumentUpdate));
+
+// Revisions
+program.command('revision-read').description('Read a revision')
+  .requiredOption('--id <id>', 'Revision ID')
+  .action(wrap(cmdRevisionRead));
+program.command('revision-list-by-wp').description('List revisions for a work package')
+  .requiredOption('--wp-id <id>', 'Work package ID')
+  .action(wrap(cmdRevisionListByWp));
+
+// Capabilities & Actions
+program.command('capability-list').description('List capabilities')
+  .option('--context <id>', 'Filter by context (project ID or "global")')
+  .option('--action <id>', 'Filter by action')
+  .option('--principal <id>', 'Filter by principal (user/group ID)')
+  .action(wrap(cmdCapabilityList));
+program.command('capability-global').description('List global capabilities')
+  .action(wrap(cmdCapabilityGlobal));
+program.command('action-list').description('List available actions')
+  .action(wrap(cmdActionList));
+program.command('action-read').description('Read an action')
+  .requiredOption('--id <id>', 'Action ID')
+  .action(wrap(cmdActionRead));
+
+// My Preferences
+program.command('my-preferences-read').description('View my preferences')
+  .action(wrap(cmdMyPreferencesRead));
+program.command('my-preferences-update').description('Update my preferences')
+  .option('--time-zone <tz>', 'Time zone')
+  .option('--auto-hide-popups <bool>', 'Auto-hide popups (true/false)')
+  .option('--comment-order <order>', 'Comment order (asc/desc)')
+  .option('--warn-on-leaving-unsaved <bool>', 'Warn on leaving unsaved (true/false)')
+  .action(wrap(cmdMyPreferencesUpdate));
+
+// Render
+program.command('render-markdown').description('Render markdown to HTML')
+  .requiredOption('--text <text>', 'Markdown text to render')
+  .action(wrap(cmdRenderMarkdown));
+program.command('render-plain').description('Render plain text to HTML')
+  .requiredOption('--text <text>', 'Plain text to render')
+  .action(wrap(cmdRenderPlain));
+
+// Posts (Forum)
+program.command('post-read').description('Read a forum post')
+  .requiredOption('--id <id>', 'Post ID')
+  .action(wrap(cmdPostRead));
+program.command('post-attachment-list').description('List attachments on a forum post')
+  .requiredOption('--id <id>', 'Post ID')
+  .action(wrap(cmdPostAttachmentList));
+
+// Reminders
+program.command('reminder-list').description('List my reminders')
+  .action(wrap(cmdReminderList));
+program.command('reminder-create').description('Create a reminder for a work package')
+  .requiredOption('--wp-id <id>', 'Work package ID')
+  .requiredOption('--remind-at <ISO>', 'Reminder date-time (ISO 8601)')
+  .option('--note <text>', 'Reminder note')
+  .action(wrap(cmdReminderCreate));
+program.command('reminder-update').description('Update a reminder')
+  .requiredOption('--id <id>', 'Reminder ID')
+  .option('--remind-at <ISO>', 'New reminder date-time')
+  .option('--note <text>', 'New note')
+  .action(wrap(cmdReminderUpdate));
+program.command('reminder-delete').description('Delete a reminder (requires --confirm)')
+  .requiredOption('--id <id>', 'Reminder ID')
+  .option('--confirm', 'Confirm deletion (required)')
+  .action(wrap(cmdReminderDelete));
+
+// Project Statuses
+program.command('project-status-read').description('Read a project status')
+  .requiredOption('--id <id>', 'Project status ID')
+  .action(wrap(cmdProjectStatusRead));
 
 // Project Phases (Enterprise)
 program.command('project-phase-definition-list').description('List project phase definitions (Enterprise)')

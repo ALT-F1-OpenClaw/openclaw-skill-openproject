@@ -143,6 +143,66 @@ node {baseDir}/scripts/openproject.mjs notification-mark-unread --id 100
 node {baseDir}/scripts/openproject.mjs notification-mark-unread --all
 ```
 
+### Documents
+
+```bash
+node {baseDir}/scripts/openproject.mjs document-list
+node {baseDir}/scripts/openproject.mjs document-read --id 5
+node {baseDir}/scripts/openproject.mjs document-update --id 5 --title "Updated title"
+```
+
+### Revisions
+
+```bash
+node {baseDir}/scripts/openproject.mjs revision-read --id 10
+node {baseDir}/scripts/openproject.mjs revision-list-by-wp --wp-id 42
+```
+
+### Capabilities & Actions
+
+```bash
+node {baseDir}/scripts/openproject.mjs capability-list --principal me
+node {baseDir}/scripts/openproject.mjs capability-global
+node {baseDir}/scripts/openproject.mjs action-list
+node {baseDir}/scripts/openproject.mjs action-read --id work_packages/create
+```
+
+### My Preferences
+
+```bash
+node {baseDir}/scripts/openproject.mjs my-preferences-read
+node {baseDir}/scripts/openproject.mjs my-preferences-update --time-zone "Europe/Brussels" --comment-order desc
+```
+
+### Render
+
+```bash
+node {baseDir}/scripts/openproject.mjs render-markdown --text "**bold** and _italic_"
+node {baseDir}/scripts/openproject.mjs render-plain --text "plain text"
+```
+
+### Posts (Forum)
+
+```bash
+node {baseDir}/scripts/openproject.mjs post-read --id 5
+node {baseDir}/scripts/openproject.mjs post-attachment-list --id 5
+```
+
+### Reminders
+
+```bash
+node {baseDir}/scripts/openproject.mjs reminder-list
+node {baseDir}/scripts/openproject.mjs reminder-create --wp-id 42 --remind-at "2026-03-20T09:00:00Z" --note "Check status"
+node {baseDir}/scripts/openproject.mjs reminder-update --id 3 --remind-at "2026-03-21T09:00:00Z"
+node {baseDir}/scripts/openproject.mjs reminder-delete --id 3 --confirm
+```
+
+### Project Statuses
+
+```bash
+node {baseDir}/scripts/openproject.mjs project-status-read --id on_track
+```
+
 ### Project Phases (Enterprise)
 
 ```bash

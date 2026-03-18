@@ -2,7 +2,7 @@
 
 This document lists all 55 API v3 resources, what this skill covers, and what's excluded with reasons.
 
-## ✅ Covered (36 resources)
+## ✅ Covered (46 resources)
 
 | Resource | Commands | Notes |
 |----------|----------|-------|
@@ -13,6 +13,15 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 | `time_entries` | time-list, time-create, time-update, time-delete | Full CRUD |
 | `users` | user-list, user-read, user-me | List/search users, view details, current user |
 | `notifications` | notification-list, notification-read, notification-mark-read, notification-mark-unread | List/read/mark with reason/project/WP filters |
+| `documents` | document-list, document-read, document-update | List, read, update documents |
+| `revisions` | revision-read, revision-list-by-wp | Read revisions, list by WP |
+| `capabilities` | capability-list, capability-global | Permission introspection |
+| `actions` | action-list, action-read | Available actions |
+| `my_preferences` | my-preferences-read, my-preferences-update | Personal preferences |
+| `render` | render-markdown, render-plain | Markdown/plain text rendering |
+| `posts` | post-read, post-attachment-list | Forum posts and attachments |
+| `reminders` | reminder-list, reminder-create, reminder-update, reminder-delete | WP reminders CRUD |
+| `project_statuses` | project-status-read | Project health statuses |
 | `project_phases` | project-phase-read | Read project phases (Enterprise) |
 | `project_phase_definitions` | project-phase-definition-list, project-phase-definition-read | List and read phase definitions (Enterprise) |
 | `portfolios` | portfolio-list, portfolio-read, portfolio-update, portfolio-delete | List, read, update, delete (Enterprise) |
@@ -46,19 +55,13 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 ## ❌ Not Covered — With Reasons
 
 ### Queries (`/api/v3/queries`)
-- **Reason:** Saved work package filters/views. Internal to OpenProject UI. CLI users can use `wp-list` filters directly instead.
-
-### Documents (`/api/v3/documents`)
-- **Reason:** Minimal API exposure. Document management is better handled via OpenProject UI or Nextcloud/SharePoint integrations.
-
-### Revisions (`/api/v3/revisions`)
-- **Reason:** Read-only. SCM/repository changesets linked to work packages. Requires server-side SCM integration (Git/SVN).
+- **Reason:** 24 endpoints for saved work package filters/views. Internal to OpenProject UI. CLI users can use `wp-list` filters directly. Complex schema-based system with limited CLI value.
 
 ### File Links (`/api/v3/file_links`)
-- **Reason:** External storage integration (Nextcloud, OneDrive, SharePoint). Requires storage integration to be configured server-side.
+- **Reason:** External storage integration (Nextcloud, OneDrive, SharePoint). Requires storage integration configured server-side.
 
 ### Storages & Project Storages (`/api/v3/storages`, `/api/v3/project_storages`)
-- **Reason:** External file storage configuration. Admin-level setup. Not a day-to-day project management action.
+- **Reason:** External file storage configuration. Admin-level setup. 13 endpoints for storage provider management.
 
 ### Grids (`/api/v3/grids`)
 - **Reason:** Dashboard/widget layout configuration. Internal to OpenProject UI rendering. No CLI use case.
@@ -66,38 +69,14 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 ### Views (`/api/v3/views`)
 - **Reason:** Saved work package views (Gantt, board, etc.). Internal to OpenProject UI. No CLI equivalent.
 
-### Capabilities & Actions (`/api/v3/capabilities`, `/api/v3/actions`)
-- **Reason:** Permission introspection. Internal framework resource. Used by OpenProject UI for dynamic permission checks.
-
-### My Preferences (`/api/v3/my_preferences`)
-- **Reason:** Personal UI preferences. Not relevant for project management automation.
-
-### Render (`/api/v3/render`)
-- **Reason:** Textile/Markdown rendering utility endpoint. Used internally by OpenProject editor.
-
-### Posts (`/api/v3/posts`)
-- **Reason:** Forum posts. Limited API, legacy feature in OpenProject.
-
-### Reminders (`/api/v3/reminders`)
-- **Reason:** User-specific notification reminders. Personal notification settings.
-
-### Project Statuses (`/api/v3/project_statuses`)
-- **Reason:** Project-level health statuses (on track, at risk, off track). Read-only reference data, low CLI value.
-
 ### Workspace & Workspaces (`/api/v3/workspace`, `/api/v3/workspaces`)
-- **Reason:** Instance/workspace info. Read-only metadata.
+- **Reason:** Newer workspace endpoints that mirror project functionality. Read-only metadata.
 
 ### Values (`/api/v3/values`)
 - **Reason:** Internal value resolution endpoint. Framework utility, not a user-facing resource.
 
 ### Example & Examples (`/api/v3/example`, `/api/v3/examples`)
 - **Reason:** API documentation examples. Not real resources.
-
-## 🔮 Candidates for Future Versions
-
-| Resource | Priority | Why |
-|----------|----------|-----|
-| Documents | Low | List and read documents (no create via API) |
 
 ## Enterprise-Only Features (All Now Covered ✅)
 
@@ -112,4 +91,4 @@ These require an OpenProject Enterprise license but are implemented in the skill
 ---
 
 *Based on OpenProject API v3 specification (55 resources, 193 endpoints)*
-*Last updated: 2026-03-18 (v1.5.0)*
+*Last updated: 2026-03-18 (v2.0.0)*

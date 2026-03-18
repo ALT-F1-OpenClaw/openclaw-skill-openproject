@@ -30,6 +30,14 @@ By [Abdelkrim BOUJRAF](https://www.alt-f1.be) / ALT-F1 SRL, Brussels 🇧🇪 �
 - **Work Packages** — Create, read, update, delete, list with filters (status, assignee, type)
 - **Projects** — List, read, create
 - **Users** — List, search, read user details, view current user
+- **Documents** — List, read, update documents
+- **Revisions** — Read revisions, list by work package
+- **Capabilities & Actions** — Permission introspection, list available actions
+- **My Preferences** — Read and update personal preferences
+- **Render** — Render markdown/plain text to HTML
+- **Posts** — Read forum posts and attachments
+- **Reminders** — CRUD for work package reminders
+- **Project Statuses** — Read project health statuses
 - **Project Phases** — List definitions, read phases (Enterprise)
 - **Portfolios** — List, read, update, delete portfolios (Enterprise)
 - **Programs** — List, read, update, delete programs (Enterprise)
@@ -90,13 +98,21 @@ node scripts/openproject.mjs wp-create --project my-project --subject "My first 
 
 See [SKILL.md](./SKILL.md) for full command reference.
 
-### 95 commands across 26 entities:
+### 120 commands across 35 entities:
 
 | Entity | Commands |
 |--------|----------|
 | Work Packages | `wp-list`, `wp-create`, `wp-read`, `wp-update`, `wp-delete` |
 | Projects | `project-list`, `project-read`, `project-create` |
 | Users | `user-list`, `user-read`, `user-me` |
+| Documents | `document-list`, `document-read`, `document-update` |
+| Revisions | `revision-read`, `revision-list-by-wp` |
+| Capabilities | `capability-list`, `capability-global`, `action-list`, `action-read` |
+| My Preferences | `my-preferences-read`, `my-preferences-update` |
+| Render | `render-markdown`, `render-plain` |
+| Posts | `post-read`, `post-attachment-list` |
+| Reminders | `reminder-list`, `reminder-create`, `reminder-update`, `reminder-delete` |
+| Project Statuses | `project-status-read` |
 | Project Phases 🏢 | `project-phase-definition-list`, `project-phase-definition-read`, `project-phase-read` |
 | Portfolios 🏢 | `portfolio-list`, `portfolio-read`, `portfolio-update`, `portfolio-delete` |
 | Programs 🏢 | `program-list`, `program-read`, `program-update`, `program-delete` |
