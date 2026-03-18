@@ -717,6 +717,111 @@ async function cmdCategoryList(options) {
   console.log(`\n${resp._embedded.elements.length} category/categories`);
 }
 
+// ── News commands ────────────────────────────────────────────────────────────
+
+async function cmdNewsList(options) {
+  const resp = await opFetch(`/news?pageSize=${CFG.maxResults}&sortBy=[["createdAt","desc"]]`);
+
+  if (!resp._embedded.elements.length) {
+    console.log('No news found.');
+    return;
+  }
+
+  for (const n of resp._embedded.elements) {
+    const author = halLink(n, 'author');
+    const project = halLink(n, 'project');
+    const created = n.createdAt?.substring(0, 10) || '?';
+    const summary = n.summary ? `  ${n.summary.substring(0, 60)}${n.summary.length > 60 ? '...' : ''}` : '';
+    console.log(`📰  #${String(n.id).padEnd(6)}  ${project.padEnd(20)}  ${created}  ${author.padEnd(20)}  ${n.title}${summary}`);
+  }
+  console.log(`\n${resp._embedded.elements.length} of ${resp.total} news item(s)`);
+}
+
+async function cmdNewsRead(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+
+  const n = await opFetch(`/news/${options.id}`);
+
+  console.log(`📰 #${n.id}: ${n.title}`);
+  console.log(`   Project:     ${halLink(n, 'project')}`);
+  console.log(`   Author:      ${halLink(n, 'author')}`);
+  console.log(`   Created:     ${n.createdAt?.substring(0, 10) || '?'}`);
+  if (n.summary) console.log(`   Summary:     ${n.summary}`);
+
+  if (n.description?.raw) {
+    console.log(`\n📝 Description:\n${n.description.raw}`);
+  }
+}
+
+async function cmdNewsCreate(options) {
+  const project = options.project || CFG.defaultProject;
+  if (!project) {
+    console.error('ERROR: --project is required (or set OP_DEFAULT_PROJECT)');
+    process.exit(1);
+  }
+  if (!options.title) {
+    console.error('ERROR: --title is required');
+    process.exit(1);
+  }
+
+  // Resolve project to numeric ID
+  const projResp = await opFetch(`/projects/${project}`);
+
+  const payload = {
+    title: options.title,
+    _links: {
+      project: { href: `/api/v3/projects/${projResp.id}` },
+    },
+  };
+
+  if (options.summary) payload.summary = options.summary;
+  if (options.description) payload.description = { format: 'markdown', raw: options.description };
+
+  const result = await opFetch('/news', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+  console.log(`✅ News created: #${result.id} — ${result.title}`);
+}
+
+async function cmdNewsUpdate(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+
+  const payload = {};
+  if (options.title) payload.title = options.title;
+  if (options.summary !== undefined) payload.summary = options.summary;
+  if (options.description) payload.description = { format: 'markdown', raw: options.description };
+
+  await opFetch(`/news/${options.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+
+  console.log(`✅ News #${options.id} updated`);
+}
+
+async function cmdNewsDelete(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+  if (!options.confirm) {
+    console.error('ERROR: Delete requires --confirm flag for safety');
+    console.error('Usage: openproject news-delete --id 5 --confirm');
+    process.exit(1);
+  }
+
+  await opFetch(`/news/${options.id}`, { method: 'DELETE' });
+  console.log(`✅ News #${options.id} deleted`);
+}
+
 // ── Watcher commands ─────────────────────────────────────────────────────────
 
 async function cmdWatcherList(options) {
@@ -1189,7 +1294,7 @@ const program = new Command();
 program
   .name('openproject')
   .description('OpenClaw OpenProject Skill — project management via API v3')
-  .version('1.6.0');
+  .version('1.7.0');
 
 // Work Packages
 program.command('wp-list').description('List work packages')
@@ -1322,6 +1427,33 @@ program.command('user-read').description('Read user details')
 
 program.command('user-me').description('Show current authenticated user')
   .action(wrap(cmdUserMe));
+
+// News
+program.command('news-list').description('List news')
+  .action(wrap(cmdNewsList));
+
+program.command('news-read').description('Read news details')
+  .requiredOption('--id <id>', 'News ID')
+  .action(wrap(cmdNewsRead));
+
+program.command('news-create').description('Create a news item')
+  .requiredOption('--title <text>', 'News headline')
+  .option('-p, --project <id>', 'Project identifier')
+  .option('-s, --summary <text>', 'Short summary')
+  .option('-d, --description <text>', 'Full description (markdown)')
+  .action(wrap(cmdNewsCreate));
+
+program.command('news-update').description('Update a news item')
+  .requiredOption('--id <id>', 'News ID')
+  .option('--title <text>', 'New headline')
+  .option('-s, --summary <text>', 'New summary')
+  .option('-d, --description <text>', 'New description (markdown)')
+  .action(wrap(cmdNewsUpdate));
+
+program.command('news-delete').description('Delete a news item (requires --confirm)')
+  .requiredOption('--id <id>', 'News ID')
+  .option('--confirm', 'Confirm deletion (required)')
+  .action(wrap(cmdNewsDelete));
 
 // Watchers
 program.command('watcher-list').description('List watchers on a work package')

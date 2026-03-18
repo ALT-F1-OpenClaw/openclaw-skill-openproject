@@ -2,7 +2,7 @@
 
 This document lists all 55 API v3 resources, what this skill covers, and what's excluded with reasons.
 
-## ✅ Covered (18 resources)
+## ✅ Covered (19 resources)
 
 | Resource | Commands | Notes |
 |----------|----------|-------|
@@ -13,6 +13,7 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 | `time_entries` | time-list, time-create, time-update, time-delete | Full CRUD |
 | `users` | user-list, user-read, user-me | List/search users, view details, current user |
 | `notifications` | notification-list, notification-read, notification-mark-read, notification-mark-unread | List/read/mark with reason/project/WP filters |
+| `news` | news-list, news-read, news-create, news-update, news-delete | Full CRUD for project announcements |
 | `watchers` | watcher-list, watcher-add, watcher-remove, watcher-available | List, add, remove watchers on WPs |
 | `relations` | relation-list, relation-read, relation-create, relation-update, relation-delete | Full CRUD with type/WP filters |
 | `wiki_pages` | wiki-read, wiki-attachment-list, wiki-attachment-add | Read page, list & upload attachments |
@@ -32,9 +33,6 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 
 ### Queries (`/api/v3/queries`)
 - **Reason:** Saved work package filters/views. Internal to OpenProject UI. CLI users can use `wp-list` filters directly instead.
-
-### News (`/api/v3/news`)
-- **Reason:** Read-only in API v3. No create/update/delete endpoints. Project news announcements.
 
 ### Budgets (`/api/v3/budgets`)
 - **Reason:** Enterprise-only feature. Financial/cost tracking tied to Enterprise edition.
@@ -118,7 +116,7 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 
 | Resource | Priority | Why |
 |----------|----------|-----|
-| News | Low | If write API becomes available |
+| Documents | Low | List and read documents (no create via API) |
 
 ## Enterprise-Only Features (Not Available on Community Edition)
 

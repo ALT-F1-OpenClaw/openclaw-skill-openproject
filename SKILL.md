@@ -1,6 +1,6 @@
 ---
 name: openproject-by-altf1be
-description: "OpenProject CRUD skill — manage work packages, projects, users, watchers, relations, notifications, time entries, comments, attachments, wiki pages, statuses, and more via OpenProject API v3 with API token auth. Supports cloud and self-hosted instances."
+description: "OpenProject CRUD skill — manage work packages, projects, news, users, watchers, relations, notifications, time entries, comments, attachments, wiki pages, statuses, and more via OpenProject API v3 with API token auth. Supports cloud and self-hosted instances."
 homepage: https://github.com/ALT-F1-OpenClaw/openclaw-skill-openproject
 metadata:
   {"openclaw": {"emoji": "📊", "requires": {"env": ["OP_HOST", "OP_API_TOKEN"]}, "optional": {"env": ["OP_DEFAULT_PROJECT", "OP_MAX_RESULTS", "OP_MAX_FILE_SIZE"]}, "primaryEnv": "OP_HOST"}}
@@ -8,7 +8,7 @@ metadata:
 
 # OpenProject by @altf1be
 
-Manage OpenProject work packages, projects, users, watchers, relations, notifications, time entries, comments, attachments, wiki pages, and workflow transitions via the API v3. Works with both cloud and self-hosted instances.
+Manage OpenProject work packages, projects, news, users, watchers, relations, notifications, time entries, comments, attachments, wiki pages, and workflow transitions via the API v3. Works with both cloud and self-hosted instances.
 
 ## Setup
 
@@ -141,6 +141,25 @@ node {baseDir}/scripts/openproject.mjs notification-mark-read --all --project 5
 # Mark as unread
 node {baseDir}/scripts/openproject.mjs notification-mark-unread --id 100
 node {baseDir}/scripts/openproject.mjs notification-mark-unread --all
+```
+
+### News
+
+```bash
+# List all news
+node {baseDir}/scripts/openproject.mjs news-list
+
+# Read news details
+node {baseDir}/scripts/openproject.mjs news-read --id 5
+
+# Create a news item
+node {baseDir}/scripts/openproject.mjs news-create --project my-project --title "Sprint 12 Released" --summary "Bug fixes and performance" --description "Full details here..."
+
+# Update a news item
+node {baseDir}/scripts/openproject.mjs news-update --id 5 --title "Updated headline"
+
+# Delete a news item (requires --confirm)
+node {baseDir}/scripts/openproject.mjs news-delete --id 5 --confirm
 ```
 
 ### Watchers
