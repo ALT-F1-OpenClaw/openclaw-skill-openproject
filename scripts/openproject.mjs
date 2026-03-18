@@ -717,6 +717,42 @@ async function cmdCategoryList(options) {
   console.log(`\n${resp._embedded.elements.length} category/categories`);
 }
 
+// ── Custom Action commands ───────────────────────────────────────────────────
+
+async function cmdCustomActionRead(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+
+  const ca = await opFetch(`/custom_actions/${options.id}`);
+
+  console.log(`⚡ Custom Action #${ca.id}: ${ca.name || '?'}`);
+  if (ca.description) console.log(`   Description: ${ca.description}`);
+}
+
+async function cmdCustomActionExecute(options) {
+  if (!options.id || !options.wpId) {
+    console.error('ERROR: --id and --wp-id are required');
+    process.exit(1);
+  }
+
+  // Get current work package for lockVersion
+  const wp = await opFetch(`/work_packages/${options.wpId}`);
+
+  await opFetch(`/custom_actions/${options.id}/execute`, {
+    method: 'POST',
+    body: JSON.stringify({
+      lockVersion: wp.lockVersion,
+      _links: {
+        workPackage: { href: `/api/v3/work_packages/${options.wpId}` },
+      },
+    }),
+  });
+
+  console.log(`✅ Custom action #${options.id} executed on WP#${options.wpId}`);
+}
+
 // ── Group commands ───────────────────────────────────────────────────────────
 
 async function cmdGroupList() {
@@ -1398,7 +1434,7 @@ const program = new Command();
 program
   .name('openproject')
   .description('OpenClaw OpenProject Skill — project management via API v3')
-  .version('1.8.0');
+  .version('1.9.0');
 
 // Work Packages
 program.command('wp-list').description('List work packages')
@@ -1531,6 +1567,16 @@ program.command('user-read').description('Read user details')
 
 program.command('user-me').description('Show current authenticated user')
   .action(wrap(cmdUserMe));
+
+// Custom Actions
+program.command('custom-action-read').description('Read a custom action')
+  .requiredOption('--id <id>', 'Custom action ID')
+  .action(wrap(cmdCustomActionRead));
+
+program.command('custom-action-execute').description('Execute a custom action on a work package')
+  .requiredOption('--id <id>', 'Custom action ID')
+  .requiredOption('--wp-id <id>', 'Work package ID')
+  .action(wrap(cmdCustomActionExecute));
 
 // Groups
 program.command('group-list').description('List groups')
