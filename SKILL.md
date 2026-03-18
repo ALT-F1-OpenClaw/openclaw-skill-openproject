@@ -1,6 +1,6 @@
 ---
 name: openproject-by-altf1be
-description: "OpenProject CRUD skill — manage work packages, projects, time entries, comments, attachments, statuses, and more via OpenProject API v3 with API token auth. Supports cloud and self-hosted instances."
+description: "OpenProject CRUD skill — manage work packages, projects, time entries, comments, attachments, wiki pages, statuses, and more via OpenProject API v3 with API token auth. Supports cloud and self-hosted instances."
 homepage: https://github.com/ALT-F1-OpenClaw/openclaw-skill-openproject
 metadata:
   {"openclaw": {"emoji": "📊", "requires": {"env": ["OP_HOST", "OP_API_TOKEN"]}, "optional": {"env": ["OP_DEFAULT_PROJECT", "OP_MAX_RESULTS", "OP_MAX_FILE_SIZE"]}, "primaryEnv": "OP_HOST"}}
@@ -8,7 +8,7 @@ metadata:
 
 # OpenProject by @altf1be
 
-Manage OpenProject work packages, projects, time entries, comments, attachments, and workflow transitions via the API v3. Works with both cloud and self-hosted instances.
+Manage OpenProject work packages, projects, time entries, comments, attachments, wiki pages, and workflow transitions via the API v3. Works with both cloud and self-hosted instances.
 
 ## Setup
 
@@ -106,6 +106,19 @@ node {baseDir}/scripts/openproject.mjs status-list
 
 # Update work package status
 node {baseDir}/scripts/openproject.mjs wp-update --id 42 --status "In progress"
+```
+
+### Wiki Pages
+
+```bash
+# Read a wiki page
+node {baseDir}/scripts/openproject.mjs wiki-read --id 72
+
+# List attachments on a wiki page
+node {baseDir}/scripts/openproject.mjs wiki-attachment-list --id 72
+
+# Upload an attachment to a wiki page
+node {baseDir}/scripts/openproject.mjs wiki-attachment-add --id 72 --file ./diagram.png
 ```
 
 ### Reference Data

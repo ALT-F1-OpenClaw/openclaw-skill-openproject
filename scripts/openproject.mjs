@@ -717,6 +717,86 @@ async function cmdCategoryList(options) {
   console.log(`\n${resp._embedded.elements.length} category/categories`);
 }
 
+// ── Wiki Page commands ──────────────────────────────────────────────────────
+
+async function cmdWikiRead(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required (wiki page numeric ID)');
+    process.exit(1);
+  }
+
+  const wp = await opFetch(`/wiki_pages/${options.id}`);
+
+  console.log(`📖 Wiki Page #${wp.id}: ${wp.title}`);
+  console.log(`   Project:     ${halLink(wp, 'project')}`);
+  console.log(`   URL:         ${CFG.host}/wiki/${wp.id}`);
+
+  if (wp._links?.attachments?.href) {
+    console.log(`   Attachments: ${wp._links.attachments.href}`);
+  }
+}
+
+async function cmdWikiAttachmentList(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required (wiki page numeric ID)');
+    process.exit(1);
+  }
+
+  const resp = await opFetch(`/wiki_pages/${options.id}/attachments`);
+
+  if (!resp._embedded.elements.length) {
+    console.log('No attachments on this wiki page.');
+    return;
+  }
+
+  for (const a of resp._embedded.elements) {
+    const size = `${(a.fileSize / 1024).toFixed(1)} KB`;
+    const created = a.createdAt?.substring(0, 10) || '';
+    const author = halLink(a, 'author');
+    console.log(`📎  #${String(a.id).padEnd(8)}  ${a.fileName.padEnd(30)}  ${size.padStart(12)}  ${created}  ${author}`);
+  }
+  console.log(`\n${resp._embedded.elements.length} attachment(s)`);
+}
+
+async function cmdWikiAttachmentAdd(options) {
+  if (!options.id || !options.file) {
+    console.error('ERROR: --id and --file are required');
+    process.exit(1);
+  }
+
+  const filePath = resolve(safePath(options.file) || options.file);
+  checkFileSize(filePath);
+
+  const fileContent = readFileSync(filePath);
+  const fileName = basename(filePath);
+
+  const form = new FormData();
+  form.append('file', new Blob([fileContent]), fileName);
+  form.append('metadata', JSON.stringify({ fileName, description: { format: 'plain', raw: '' } }));
+
+  const url = `${baseUrl()}/wiki_pages/${options.id}/attachments`;
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: { 'Authorization': authHeader() },
+    body: form,
+  });
+
+  if (!resp.ok) {
+    const body = await resp.text();
+    let json;
+    try { json = JSON.parse(body); } catch { json = null; }
+    const msg = json?.message || json?.errorIdentifier || body;
+    console.error(`ERROR (${resp.status}): ${msg}`);
+    process.exit(1);
+  }
+
+  const result = await resp.json();
+  console.log(`✅ Attachment uploaded to wiki page #${options.id}`);
+  console.log(`   File: ${result.fileName}`);
+  console.log(`   Size: ${(result.fileSize / 1024).toFixed(1)} KB`);
+  console.log(`   ID: ${result.id}`);
+}
+
 // ── CLI ─────────────────────────────────────────────────────────────────────
 
 const program = new Command();
@@ -724,7 +804,7 @@ const program = new Command();
 program
   .name('openproject')
   .description('OpenClaw OpenProject Skill — project management via API v3')
-  .version('1.1.3');
+  .version('1.2.0');
 
 // Work Packages
 program.command('wp-list').description('List work packages')
@@ -843,6 +923,20 @@ program.command('version-list').description('List project versions/milestones')
 program.command('category-list').description('List project categories')
   .option('-p, --project <id>', 'Project identifier')
   .action(wrap(cmdCategoryList));
+
+// Wiki Pages
+program.command('wiki-read').description('Read a wiki page')
+  .requiredOption('--id <id>', 'Wiki page numeric ID')
+  .action(wrap(cmdWikiRead));
+
+program.command('wiki-attachment-list').description('List attachments on a wiki page')
+  .requiredOption('--id <id>', 'Wiki page numeric ID')
+  .action(wrap(cmdWikiAttachmentList));
+
+program.command('wiki-attachment-add').description('Upload an attachment to a wiki page')
+  .requiredOption('--id <id>', 'Wiki page numeric ID')
+  .requiredOption('-f, --file <path>', 'Local file path')
+  .action(wrap(cmdWikiAttachmentAdd));
 
 function wrap(fn) {
   return async (...args) => {
