@@ -143,6 +143,16 @@ node {baseDir}/scripts/openproject.mjs notification-mark-unread --id 100
 node {baseDir}/scripts/openproject.mjs notification-mark-unread --all
 ```
 
+### OAuth
+
+```bash
+# Read an OAuth application
+node {baseDir}/scripts/openproject.mjs oauth-app-read --id 1
+
+# Read OAuth client credentials
+node {baseDir}/scripts/openproject.mjs oauth-credentials-read --id 1
+```
+
 ### Help Texts
 
 ```bash
