@@ -717,6 +717,144 @@ async function cmdCategoryList(options) {
   console.log(`\n${resp._embedded.elements.length} category/categories`);
 }
 
+// ── Relation commands ────────────────────────────────────────────────────────
+
+const RELATION_TYPES = [
+  'relates', 'duplicates', 'duplicated', 'blocks', 'blocked',
+  'precedes', 'follows', 'includes', 'partof', 'requires', 'required',
+];
+
+function relationEmoji(type) {
+  const map = {
+    relates: '🔗', duplicates: '♊', duplicated: '♊',
+    blocks: '🚫', blocked: '🚫', precedes: '⏩', follows: '⏪',
+    includes: '📦', partof: '🧩', requires: '⚙️', required: '⚙️',
+  };
+  return map[type] || '🔗';
+}
+
+async function cmdRelationList(options) {
+  const filters = [];
+
+  if (options.wpId) {
+    filters.push({ involved: { operator: '=', values: [options.wpId] } });
+  }
+  if (options.type) {
+    filters.push({ type: { operator: '=', values: [options.type] } });
+  }
+
+  const filterParam = filters.length ? `&filters=${encodeURIComponent(JSON.stringify(filters))}` : '';
+  const resp = await opFetch(`/relations?pageSize=${CFG.maxResults}${filterParam}`);
+
+  if (!resp._embedded.elements.length) {
+    console.log('No relations found.');
+    return;
+  }
+
+  for (const r of resp._embedded.elements) {
+    const fromId = halId(r, 'from') || '?';
+    const toId = halId(r, 'to') || '?';
+    const emoji = relationEmoji(r.type);
+    const desc = r.description ? `  "${r.description}"` : '';
+    const lag = r.lag ? `  (lag: ${r.lag}d)` : '';
+    console.log(`${emoji}  #${String(r.id).padEnd(6)}  WP#${fromId} → ${r.type} → WP#${toId}${lag}${desc}`);
+  }
+  console.log(`\n${resp._embedded.elements.length} relation(s)`);
+}
+
+async function cmdRelationRead(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+
+  const r = await opFetch(`/relations/${options.id}`);
+
+  const fromId = halId(r, 'from') || '?';
+  const toId = halId(r, 'to') || '?';
+  const emoji = relationEmoji(r.type);
+
+  console.log(`${emoji} Relation #${r.id}`);
+  console.log(`   Type:        ${r.type}`);
+  console.log(`   From:        WP#${fromId}`);
+  console.log(`   To:          WP#${toId}`);
+  if (r.lag != null) console.log(`   Lag:         ${r.lag} day(s)`);
+  if (r.description) console.log(`   Description: ${r.description}`);
+  if (r.reverseType) console.log(`   Reverse:     ${r.reverseType}`);
+}
+
+async function cmdRelationCreate(options) {
+  if (!options.wpId || !options.toWpId || !options.type) {
+    console.error('ERROR: --wp-id, --to-wp-id, and --type are required');
+    process.exit(1);
+  }
+
+  const type = options.type.toLowerCase();
+  if (!RELATION_TYPES.includes(type)) {
+    console.error(`ERROR: Invalid type "${options.type}". Must be one of: ${RELATION_TYPES.join(', ')}`);
+    process.exit(1);
+  }
+
+  const payload = {
+    type,
+    _links: {
+      to: { href: `/api/v3/work_packages/${options.toWpId}` },
+    },
+  };
+
+  if (options.description) payload.description = options.description;
+  if (options.lag !== undefined) payload.lag = parseInt(options.lag, 10);
+
+  const result = await opFetch(`/work_packages/${options.wpId}/relations`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+  console.log(`✅ Relation created: WP#${options.wpId} ${type} WP#${options.toWpId}`);
+  console.log(`   ID: ${result.id}`);
+}
+
+async function cmdRelationUpdate(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+
+  const payload = {};
+  if (options.type) {
+    const type = options.type.toLowerCase();
+    if (!RELATION_TYPES.includes(type)) {
+      console.error(`ERROR: Invalid type "${options.type}". Must be one of: ${RELATION_TYPES.join(', ')}`);
+      process.exit(1);
+    }
+    payload.type = type;
+  }
+  if (options.description !== undefined) payload.description = options.description || null;
+  if (options.lag !== undefined) payload.lag = parseInt(options.lag, 10);
+
+  await opFetch(`/relations/${options.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+
+  console.log(`✅ Relation #${options.id} updated`);
+}
+
+async function cmdRelationDelete(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required');
+    process.exit(1);
+  }
+  if (!options.confirm) {
+    console.error('ERROR: Delete requires --confirm flag for safety');
+    console.error('Usage: openproject relation-delete --id 5 --confirm');
+    process.exit(1);
+  }
+
+  await opFetch(`/relations/${options.id}`, { method: 'DELETE' });
+  console.log(`✅ Relation #${options.id} deleted`);
+}
+
 // ── Wiki Page commands ──────────────────────────────────────────────────────
 
 async function cmdWikiRead(options) {
@@ -804,7 +942,7 @@ const program = new Command();
 program
   .name('openproject')
   .description('OpenClaw OpenProject Skill — project management via API v3')
-  .version('1.2.0');
+  .version('1.3.0');
 
 // Work Packages
 program.command('wp-list').description('List work packages')
@@ -923,6 +1061,36 @@ program.command('version-list').description('List project versions/milestones')
 program.command('category-list').description('List project categories')
   .option('-p, --project <id>', 'Project identifier')
   .action(wrap(cmdCategoryList));
+
+// Relations
+program.command('relation-list').description('List relations')
+  .option('--wp-id <id>', 'Filter by work package ID (shows all relations involving this WP)')
+  .option('-t, --type <type>', 'Filter by relation type (relates, blocks, follows, precedes, ...)')
+  .action(wrap(cmdRelationList));
+
+program.command('relation-read').description('Read relation details')
+  .requiredOption('--id <id>', 'Relation ID')
+  .action(wrap(cmdRelationRead));
+
+program.command('relation-create').description('Create a relation between work packages')
+  .requiredOption('--wp-id <id>', 'Source work package ID')
+  .requiredOption('--to-wp-id <id>', 'Target work package ID')
+  .requiredOption('-t, --type <type>', 'Relation type: relates, duplicates, blocks, precedes, follows, includes, partof, requires')
+  .option('-d, --description <text>', 'Description')
+  .option('--lag <days>', 'Lag in days (for precedes/follows)')
+  .action(wrap(cmdRelationCreate));
+
+program.command('relation-update').description('Update a relation')
+  .requiredOption('--id <id>', 'Relation ID')
+  .option('-t, --type <type>', 'New relation type')
+  .option('-d, --description <text>', 'New description (empty string to clear)')
+  .option('--lag <days>', 'New lag in days')
+  .action(wrap(cmdRelationUpdate));
+
+program.command('relation-delete').description('Delete a relation (requires --confirm)')
+  .requiredOption('--id <id>', 'Relation ID')
+  .option('--confirm', 'Confirm deletion (required)')
+  .action(wrap(cmdRelationDelete));
 
 // Wiki Pages
 program.command('wiki-read').description('Read a wiki page')

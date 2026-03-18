@@ -2,7 +2,7 @@
 
 This document lists all 55 API v3 resources, what this skill covers, and what's excluded with reasons.
 
-## ✅ Covered (14 resources)
+## ✅ Covered (15 resources)
 
 | Resource | Commands | Notes |
 |----------|----------|-------|
@@ -11,6 +11,7 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 | `activities` | comment-list, comment-add | Comments on work packages |
 | `attachments` | attachment-list, attachment-add, attachment-delete | Upload/delete on work packages |
 | `time_entries` | time-list, time-create, time-update, time-delete | Full CRUD |
+| `relations` | relation-list, relation-read, relation-create, relation-update, relation-delete | Full CRUD with type/WP filters |
 | `wiki_pages` | wiki-read, wiki-attachment-list, wiki-attachment-add | Read page, list & upload attachments |
 | `statuses` | status-list | List all statuses; transitions via wp-update --status |
 | `types` | type-list | List work package types |
@@ -28,9 +29,6 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 
 ### Notifications (`/api/v3/notifications`)
 - **Reason:** Read-only, user-specific in-app notifications. Low value for CLI automation — better consumed via OpenProject UI or email.
-
-### Relations (`/api/v3/relations`)
-- **Reason:** Work package dependency links (blocks, follows, relates to, etc.). **Candidate for future version** — useful but complex bidirectional relationships.
 
 ### Queries (`/api/v3/queries`)
 - **Reason:** Saved work package filters/views. Internal to OpenProject UI. CLI users can use `wp-list` filters directly instead.
@@ -123,7 +121,6 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 
 | Resource | Priority | Why |
 |----------|----------|-----|
-| Relations | High | Dependency tracking (blocks, follows, etc.) is very useful for project management |
 | Users | Medium | If user lookup/search is needed beyond member-list |
 | Notifications | Low | Could be useful for monitoring, but mostly a UI concern |
 | News | Low | If write API becomes available |

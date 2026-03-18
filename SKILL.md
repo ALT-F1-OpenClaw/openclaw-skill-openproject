@@ -1,6 +1,6 @@
 ---
 name: openproject-by-altf1be
-description: "OpenProject CRUD skill — manage work packages, projects, time entries, comments, attachments, wiki pages, statuses, and more via OpenProject API v3 with API token auth. Supports cloud and self-hosted instances."
+description: "OpenProject CRUD skill — manage work packages, projects, relations, time entries, comments, attachments, wiki pages, statuses, and more via OpenProject API v3 with API token auth. Supports cloud and self-hosted instances."
 homepage: https://github.com/ALT-F1-OpenClaw/openclaw-skill-openproject
 metadata:
   {"openclaw": {"emoji": "📊", "requires": {"env": ["OP_HOST", "OP_API_TOKEN"]}, "optional": {"env": ["OP_DEFAULT_PROJECT", "OP_MAX_RESULTS", "OP_MAX_FILE_SIZE"]}, "primaryEnv": "OP_HOST"}}
@@ -8,7 +8,7 @@ metadata:
 
 # OpenProject by @altf1be
 
-Manage OpenProject work packages, projects, time entries, comments, attachments, wiki pages, and workflow transitions via the API v3. Works with both cloud and self-hosted instances.
+Manage OpenProject work packages, projects, relations, time entries, comments, attachments, wiki pages, and workflow transitions via the API v3. Works with both cloud and self-hosted instances.
 
 ## Setup
 
@@ -106,6 +106,27 @@ node {baseDir}/scripts/openproject.mjs status-list
 
 # Update work package status
 node {baseDir}/scripts/openproject.mjs wp-update --id 42 --status "In progress"
+```
+
+### Relations
+
+```bash
+# List all relations (optionally filter by work package or type)
+node {baseDir}/scripts/openproject.mjs relation-list --wp-id 42
+node {baseDir}/scripts/openproject.mjs relation-list --type blocks
+
+# Read relation details
+node {baseDir}/scripts/openproject.mjs relation-read --id 5
+
+# Create a relation (types: relates, duplicates, blocks, precedes, follows, includes, partof, requires)
+node {baseDir}/scripts/openproject.mjs relation-create --wp-id 42 --to-wp-id 43 --type blocks
+node {baseDir}/scripts/openproject.mjs relation-create --wp-id 42 --to-wp-id 43 --type precedes --lag 2
+
+# Update a relation
+node {baseDir}/scripts/openproject.mjs relation-update --id 5 --type follows --lag 1
+
+# Delete a relation (requires --confirm)
+node {baseDir}/scripts/openproject.mjs relation-delete --id 5 --confirm
 ```
 
 ### Wiki Pages
