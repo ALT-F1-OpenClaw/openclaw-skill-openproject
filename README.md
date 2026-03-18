@@ -9,7 +9,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/ALT-F1-OpenClaw/openclaw-skill-openproject)](https://github.com/ALT-F1-OpenClaw/openclaw-skill-openproject/issues)
 [![GitHub stars](https://img.shields.io/github/stars/ALT-F1-OpenClaw/openclaw-skill-openproject)](https://github.com/ALT-F1-OpenClaw/openclaw-skill-openproject/stargazers)
 
-OpenClaw skill for OpenProject — CRUD work packages, projects, time entries, comments, attachments, and more via OpenProject API v3. Supports both cloud and self-hosted instances.
+OpenClaw skill for OpenProject — CRUD work packages, projects, time entries, comments, attachments, wiki pages, and more via OpenProject API v3. Supports both cloud and self-hosted instances.
 
 By [Abdelkrim BOUJRAF](https://www.alt-f1.be) / ALT-F1 SRL, Brussels 🇧🇪 🇲🇦
 
@@ -34,6 +34,7 @@ By [Abdelkrim BOUJRAF](https://www.alt-f1.be) / ALT-F1 SRL, Brussels 🇧🇪 �
 - **Time Entries** — CRUD time tracking with hours, dates, and activity types
 - **Statuses & Transitions** — List statuses, update work package status
 - **Reference Data** — Types, priorities, members, versions, categories
+- **Wiki Pages** — Read wiki pages, list and upload attachments
 - **Security** — `--confirm` required for deletes, no secrets to stdout, rate-limit retry with backoff
 - **Auth** — API token (works with cloud and self-hosted)
 
@@ -71,7 +72,7 @@ node scripts/openproject.mjs wp-create --project my-project --subject "My first 
 
 See [SKILL.md](./SKILL.md) for full command reference.
 
-### 27 commands across 7 entities:
+### 30 commands across 8 entities:
 
 | Entity | Commands |
 |--------|----------|
@@ -80,6 +81,7 @@ See [SKILL.md](./SKILL.md) for full command reference.
 | Comments | `comment-list`, `comment-add` |
 | Attachments | `attachment-list`, `attachment-add`, `attachment-delete` |
 | Time Entries | `time-list`, `time-create`, `time-update`, `time-delete` |
+| Wiki Pages | `wiki-read`, `wiki-attachment-list`, `wiki-attachment-add` |
 | Statuses/Transitions | `status-list` + `wp-update --status` |
 | Reference Data | `type-list`, `priority-list`, `member-list`, `version-list`, `category-list` |
 

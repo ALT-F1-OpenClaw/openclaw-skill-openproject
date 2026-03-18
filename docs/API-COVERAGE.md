@@ -2,7 +2,7 @@
 
 This document lists all 55 API v3 resources, what this skill covers, and what's excluded with reasons.
 
-## ✅ Covered (13 resources)
+## ✅ Covered (14 resources)
 
 | Resource | Commands | Notes |
 |----------|----------|-------|
@@ -11,6 +11,7 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 | `activities` | comment-list, comment-add | Comments on work packages |
 | `attachments` | attachment-list, attachment-add, attachment-delete | Upload/delete on work packages |
 | `time_entries` | time-list, time-create, time-update, time-delete | Full CRUD |
+| `wiki_pages` | wiki-read, wiki-attachment-list, wiki-attachment-add | Read page, list & upload attachments |
 | `statuses` | status-list | List all statuses; transitions via wp-update --status |
 | `types` | type-list | List work package types |
 | `priorities` | priority-list | List priorities |
@@ -33,9 +34,6 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 
 ### Queries (`/api/v3/queries`)
 - **Reason:** Saved work package filters/views. Internal to OpenProject UI. CLI users can use `wp-list` filters directly instead.
-
-### Wiki Pages (`/api/v3/wiki_pages`)
-- **Reason:** Limited API — read-only in current API v3. No create/update via REST. Would only support listing/reading.
 
 ### News (`/api/v3/news`)
 - **Reason:** Read-only in API v3. No create/update/delete endpoints. Project news announcements.
@@ -126,7 +124,6 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 | Resource | Priority | Why |
 |----------|----------|-----|
 | Relations | High | Dependency tracking (blocks, follows, etc.) is very useful for project management |
-| Wiki Pages | Medium | If API adds write support in the future |
 | Users | Medium | If user lookup/search is needed beyond member-list |
 | Notifications | Low | Could be useful for monitoring, but mostly a UI concern |
 | News | Low | If write API becomes available |
@@ -143,4 +140,4 @@ These require an OpenProject Enterprise license:
 ---
 
 *Based on OpenProject API v3 specification (55 resources, 193 endpoints)*
-*Last updated: 2026-03-09*
+*Last updated: 2026-03-18*
