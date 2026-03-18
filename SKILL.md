@@ -143,6 +143,19 @@ node {baseDir}/scripts/openproject.mjs notification-mark-unread --id 100
 node {baseDir}/scripts/openproject.mjs notification-mark-unread --all
 ```
 
+### Project Phases (Enterprise)
+
+```bash
+# List project phase definitions
+node {baseDir}/scripts/openproject.mjs project-phase-definition-list
+
+# Read a phase definition
+node {baseDir}/scripts/openproject.mjs project-phase-definition-read --id 1
+
+# Read a project phase
+node {baseDir}/scripts/openproject.mjs project-phase-read --id 5
+```
+
 ### Portfolios (Enterprise)
 
 ```bash

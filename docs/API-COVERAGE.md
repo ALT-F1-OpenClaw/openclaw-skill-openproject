@@ -2,7 +2,7 @@
 
 This document lists all 55 API v3 resources, what this skill covers, and what's excluded with reasons.
 
-## ✅ Covered (34 resources)
+## ✅ Covered (36 resources)
 
 | Resource | Commands | Notes |
 |----------|----------|-------|
@@ -13,6 +13,8 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 | `time_entries` | time-list, time-create, time-update, time-delete | Full CRUD |
 | `users` | user-list, user-read, user-me | List/search users, view details, current user |
 | `notifications` | notification-list, notification-read, notification-mark-read, notification-mark-unread | List/read/mark with reason/project/WP filters |
+| `project_phases` | project-phase-read | Read project phases (Enterprise) |
+| `project_phase_definitions` | project-phase-definition-list, project-phase-definition-read | List and read phase definitions (Enterprise) |
 | `portfolios` | portfolio-list, portfolio-read, portfolio-update, portfolio-delete | List, read, update, delete (Enterprise) |
 | `programs` | program-list, program-read, program-update, program-delete | List, read, update, delete (Enterprise) |
 | `placeholder_users` | placeholder-user-list, placeholder-user-read, placeholder-user-create, placeholder-user-update, placeholder-user-delete | Full CRUD (Enterprise) |
@@ -79,9 +81,6 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 ### Reminders (`/api/v3/reminders`)
 - **Reason:** User-specific notification reminders. Personal notification settings.
 
-### Project Phases & Definitions (`/api/v3/project_phases`, `/api/v3/project_phase_definitions`)
-- **Reason:** Enterprise-only. Project lifecycle phase tracking.
-
 ### Project Statuses (`/api/v3/project_statuses`)
 - **Reason:** Project-level health statuses (on track, at risk, off track). Read-only reference data, low CLI value.
 
@@ -100,14 +99,15 @@ This document lists all 55 API v3 resources, what this skill covers, and what's 
 |----------|----------|-----|
 | Documents | Low | List and read documents (no create via API) |
 
-## Enterprise-Only Features (Not Available on Community Edition)
+## Enterprise-Only Features (All Now Covered ✅)
 
-These require an OpenProject Enterprise license:
-- Meetings
-- Budgets
-- Placeholder Users
-- Portfolios & Programs
-- Project Phases
+These require an OpenProject Enterprise license but are implemented in the skill:
+- Meetings — read, attachments
+- Budgets — list, read
+- Placeholder Users — full CRUD
+- Portfolios — list, read, update, delete
+- Programs — list, read, update, delete
+- Project Phases — list definitions, read phases
 
 ---
 
