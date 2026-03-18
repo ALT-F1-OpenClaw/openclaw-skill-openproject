@@ -143,6 +143,16 @@ node {baseDir}/scripts/openproject.mjs notification-mark-unread --id 100
 node {baseDir}/scripts/openproject.mjs notification-mark-unread --all
 ```
 
+### Configuration
+
+```bash
+# View instance configuration
+node {baseDir}/scripts/openproject.mjs config-read
+
+# View project-specific configuration
+node {baseDir}/scripts/openproject.mjs project-config-read --project my-project
+```
+
 ### OAuth
 
 ```bash
