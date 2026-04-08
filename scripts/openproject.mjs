@@ -230,6 +230,26 @@ async function cmdWpCreate(options) {
     if (match) payload._links.priority = { href: `/api/v3/priorities/${match.id}` };
   }
 
+  // Add assignee (user ID)
+  if (options.assignee) {
+    payload._links.assignee = { href: `/api/v3/users/${options.assignee}` };
+  }
+
+  // Add startDate (direct property)
+  if (options.startDate) {
+    payload.startDate = options.startDate;
+  }
+
+  // Add dueDate (direct property)
+  if (options.dueDate) {
+    payload.dueDate = options.dueDate;
+  }
+
+  // Add estimatedTime (ISO 8601 duration)
+  if (options.estimate) {
+    payload.estimatedTime = options.estimate;
+  }
+
   // Clean null links
   if (!payload._links.type.href) delete payload._links.type;
   if (!payload._links.priority.href) delete payload._links.priority;
@@ -263,6 +283,8 @@ async function cmdWpRead(options) {
   console.log(`   Category:    ${halLink(wp, 'category')}`);
   console.log(`   Created:     ${wp.createdAt?.substring(0, 10) || '?'}`);
   console.log(`   Updated:     ${wp.updatedAt?.substring(0, 10) || '?'}`);
+  console.log(`   Start Date:  ${wp.startDate || '?'}`);
+  console.log(`   Due Date:    ${wp.dueDate || '?'}`);
   console.log(`   % Done:      ${wp.percentageDone ?? '?'}%`);
   console.log(`   Estimated:   ${wp.estimatedTime || '?'}`);
   console.log(`   URL:         ${CFG.host}/work_packages/${wp.id}`);
@@ -285,6 +307,9 @@ async function cmdWpUpdate(options) {
   if (options.subject) payload.subject = options.subject;
   if (options.description) payload.description = { format: 'markdown', raw: options.description };
   if (options.percentDone !== undefined) payload.percentageDone = parseInt(options.percentDone, 10);
+  if (options.startDate) payload.startDate = options.startDate;
+  if (options.dueDate) payload.dueDate = options.dueDate;
+  if (options.estimate) payload.estimatedTime = options.estimate;
 
   if (options.status) {
     const statuses = await opFetch('/statuses');
@@ -311,6 +336,10 @@ async function cmdWpUpdate(options) {
       );
       if (match) payload._links.type = { href: `/api/v3/types/${match.id}` };
     }
+  }
+
+  if (options.assignee) {
+    payload._links.assignee = { href: `/api/v3/users/${options.assignee}` };
   }
 
   if (Object.keys(payload._links).length === 0) delete payload._links;
@@ -369,6 +398,7 @@ async function cmdProjectRead(options) {
   console.log(`   ID:          ${p.id}`);
   console.log(`   Active:      ${p.active ? 'Yes' : 'No'}`);
   console.log(`   Public:      ${p.public ? 'Yes' : 'No'}`);
+  console.log(`   Parent:      ${halLink(p, 'parent') || 'None'}`);
   console.log(`   Created:     ${p.createdAt?.substring(0, 10) || '?'}`);
   console.log(`   Updated:     ${p.updatedAt?.substring(0, 10) || '?'}`);
   console.log(`   URL:         ${CFG.host}/projects/${p.identifier}`);
@@ -391,6 +421,12 @@ async function cmdProjectCreate(options) {
   if (options.description) payload.description = { format: 'markdown', raw: options.description };
   if (options.public !== undefined) payload.public = options.public === 'true';
 
+  // Add parent project
+  if (options.parent) {
+    payload._links = payload._links || {};
+    payload._links.parent = { href: `/api/v3/projects/${options.parent}` };
+  }
+
   const result = await opFetch('/projects', {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -400,6 +436,42 @@ async function cmdProjectCreate(options) {
   console.log(`   Identifier: ${result.identifier}`);
   console.log(`   ID: ${result.id}`);
   console.log(`   URL: ${CFG.host}/projects/${result.identifier}`);
+}
+
+async function cmdProjectUpdate(options) {
+  if (!options.id) {
+    console.error('ERROR: --id is required (project identifier or numeric ID)');
+    process.exit(1);
+  }
+
+  // Get current project for lockVersion
+  const current = await opFetch(`/projects/${options.id}`);
+  const payload = { lockVersion: current.lockVersion };
+
+  if (options.name) payload.name = options.name;
+  if (options.description !== undefined) {
+    payload.description = options.description ? { format: 'markdown', raw: options.description } : null;
+  }
+  if (options.public !== undefined) payload.public = options.public === 'true';
+  if (options.active !== undefined) payload.active = options.active === 'true';
+
+  // Handle parent update via _links
+  if (options.parent !== undefined) {
+    payload._links = payload._links || {};
+    if (options.parent) {
+      payload._links.parent = { href: `/api/v3/projects/${options.parent}` };
+    } else {
+      payload._links.parent = null;
+    }
+  }
+
+  const result = await opFetch(`/projects/${options.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+
+  console.log(`✅ Updated project: ${result.name}`);
+  console.log(`   Identifier: ${result.identifier}`);
 }
 
 // ── Comment (Activity) commands ─────────────────────────────────────────────
@@ -1409,6 +1481,7 @@ async function cmdConfigRead() {
   const cfg = await opFetch('/configuration');
 
   console.log('⚙️ Instance Configuration');
+
   if (cfg.maximumAttachmentFileSize) console.log(`   Max attachment size: ${cfg.maximumAttachmentFileSize} bytes`);
   if (cfg.perPageOptions) console.log(`   Per-page options:   ${JSON.stringify(cfg.perPageOptions)}`);
   if (cfg.dateFormat) console.log(`   Date format:        ${cfg.dateFormat}`);
@@ -2297,7 +2370,7 @@ const program = new Command();
 program
   .name('openproject')
   .description('OpenClaw OpenProject Skill — project management via API v3')
-  .version('2.0.0');
+  .version('2.1.0');
 
 // Work Packages
 program.command('wp-list').description('List work packages')
@@ -2313,6 +2386,10 @@ program.command('wp-create').description('Create a work package')
   .option('-d, --description <text>', 'Description (markdown)')
   .option('-t, --type <name>', 'Type (Task, Bug, Feature...)')
   .option('--priority <name>', 'Priority name')
+  .option('--assignee <user-id>', 'Assignee user ID')
+  .option('--start-date <date>', 'Start date (YYYY-MM-DD)')
+  .option('--due-date <date>', 'Due date (YYYY-MM-DD)')
+  .option('--estimate <duration>', 'Estimated time (ISO 8601 duration, e.g., PT2H30M)')
   .action(wrap(cmdWpCreate));
 
 program.command('wp-read').description('Read work package details')
@@ -2327,6 +2404,10 @@ program.command('wp-update').description('Update a work package')
   .option('--priority <name>', 'New priority name')
   .option('-t, --type <name>', 'New type name')
   .option('--percent-done <n>', 'Percentage done (0-100)')
+  .option('--assignee <user-id>', 'Assignee user ID')
+  .option('--start-date <date>', 'Start date (YYYY-MM-DD)')
+  .option('--due-date <date>', 'Due date (YYYY-MM-DD)')
+  .option('--estimate <duration>', 'Estimated time (ISO 8601 duration, e.g., PT2H30M)')
   .action(wrap(cmdWpUpdate));
 
 program.command('wp-delete').description('Delete a work package (requires --confirm)')
@@ -2347,7 +2428,17 @@ program.command('project-create').description('Create a project')
   .option('-i, --identifier <id>', 'Project identifier (slug)')
   .option('-d, --description <text>', 'Description')
   .option('--public <bool>', 'Public project (true/false)')
+  .option('--parent <id>', 'Parent project identifier or numeric ID')
   .action(wrap(cmdProjectCreate));
+
+program.command('project-update').description('Update a project')
+  .requiredOption('--id <id>', 'Project identifier or numeric ID')
+  .option('-n, --name <name>', 'New project name')
+  .option('-d, --description <text>', 'New description (empty string to clear)')
+  .option('--public <bool>', 'Public project (true/false)')
+  .option('--active <bool>', 'Active status (true/false)')
+  .option('--parent <id>', 'Parent project identifier or numeric ID (empty string to remove)')
+  .action(wrap(cmdProjectUpdate));
 
 // Comments
 program.command('comment-list').description('List comments on a work package')
