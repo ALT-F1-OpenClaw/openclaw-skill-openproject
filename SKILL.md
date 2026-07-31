@@ -31,7 +31,9 @@ OP_DEFAULT_PROJECT=my-project
 
 ```bash
 # List work packages (with optional filters)
-node {baseDir}/scripts/openproject.mjs wp-list --project my-project --status open --assignee me
+# --open / --closed filter by open vs closed category; --status takes an exact status name
+node {baseDir}/scripts/openproject.mjs wp-list --project my-project --open --assignee me
+node {baseDir}/scripts/openproject.mjs wp-list --project my-project --status "In progress"
 
 # Create a work package
 node {baseDir}/scripts/openproject.mjs wp-create --project my-project --type Task --subject "Fix login bug" --description "Users can't log in"
