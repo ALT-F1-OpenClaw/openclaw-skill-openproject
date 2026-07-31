@@ -153,13 +153,20 @@ async function cmdWpList(options) {
     const projResp = await opFetch(`/projects/${project}`);
     filters.push({ project: { operator: '=', values: [String(projResp.id)] } });
   }
-  if (options.status) {
-    // Resolve status name to ID
+  if (options.open || options.closed) {
+    // OpenProject native meta-filter: 'o' = any open status, 'c' = any closed status
+    filters.push({ status: { operator: options.closed ? 'c' : 'o', values: [] } });
+  } else if (options.status) {
+    // Resolve status name to ID (exact, case-insensitive)
     const statuses = await opFetch('/statuses');
     const match = statuses._embedded.elements.find(
       s => s.name.toLowerCase() === options.status.toLowerCase()
     );
-    if (match) filters.push({ status: { operator: '=', values: [String(match.id)] } });
+    if (!match) {
+      const names = statuses._embedded.elements.map(s => s.name).join(', ');
+      throw new Error(`No status named "${options.status}". Available: ${names}. For all open/closed items use --open or --closed.`);
+    }
+    filters.push({ status: { operator: '=', values: [String(match.id)] } });
   }
   if (options.assignee === 'me') {
     filters.push({ assignee: { operator: '=', values: ['me'] } });
@@ -2302,7 +2309,9 @@ program
 // Work Packages
 program.command('wp-list').description('List work packages')
   .option('-p, --project <id>', 'Project identifier')
-  .option('-s, --status <name>', 'Filter by status name')
+  .option('-s, --status <name>', 'Filter by exact status name (e.g. "In progress")')
+  .option('--open', 'Show only open work packages (any non-closed status)')
+  .option('--closed', 'Show only closed work packages')
   .option('-a, --assignee <user>', 'Filter by assignee ("me" or user ID)')
   .option('-t, --type <name>', 'Filter by type name')
   .action(wrap(cmdWpList));
