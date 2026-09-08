@@ -135,8 +135,11 @@ node {baseDir}/scripts/openproject.mjs time-read --id 5
 node {baseDir}/scripts/openproject.mjs time-activity-read --id 1
 node {baseDir}/scripts/openproject.mjs time-projects
 
-# Log time
+# Log time (duration on a date)
 node {baseDir}/scripts/openproject.mjs time-create --wp-id 42 --hours 2.5 --comment "Code review" --activity-id 1
+
+# Log time with a specific start + end (finish time is auto-derived from the span)
+node {baseDir}/scripts/openproject.mjs time-create --wp-id 42 --start 2026-09-08T13:00 --end 2026-09-08T14:30 --comment "Pairing"
 
 # Update time entry
 node {baseDir}/scripts/openproject.mjs time-update --id 5 --hours 3 --comment "Updated"

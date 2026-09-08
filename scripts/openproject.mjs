@@ -827,18 +827,69 @@ async function cmdTimeList(options) {
 }
 
 async function cmdTimeCreate(options) {
-  if (!options.wpId || !options.hours) {
-    console.error('ERROR: --wp-id and --hours are required');
+  if (!options.wpId) {
+    console.error('ERROR: --wp-id is required');
     process.exit(1);
   }
 
-  const hours = parseFloat(options.hours);
+  // Resolve hours and optional start time. --end is a convenience wrapper:
+  // when paired with --start, hours is derived from the start..end span and
+  // OpenProject computes the (read-only) finish time from startTime + hours.
+  let startISO;
+  let hours;
+  if (options.start) {
+    const startDate = new Date(options.start);
+    if (isNaN(startDate.getTime())) {
+      console.error(`ERROR: invalid --start "${options.start}" (use ISO 8601, e.g. 2026-09-08T13:00)`);
+      process.exit(1);
+    }
+    startISO = startDate.toISOString();
+    if (options.end) {
+      if (options.hours) {
+        console.error('ERROR: pass either --end or --hours, not both');
+        process.exit(1);
+      }
+      const endDate = new Date(options.end);
+      if (isNaN(endDate.getTime())) {
+        console.error(`ERROR: invalid --end "${options.end}" (use ISO 8601, e.g. 2026-09-08T14:30)`);
+        process.exit(1);
+      }
+      hours = (endDate.getTime() - startDate.getTime()) / 3600000;
+      if (hours <= 0) {
+        console.error('ERROR: --end must be after --start');
+        process.exit(1);
+      }
+    } else if (options.hours) {
+      hours = parseFloat(options.hours);
+    } else {
+      console.error('ERROR: with --start, also pass --end or --hours');
+      process.exit(1);
+    }
+  } else if (options.end) {
+    console.error('ERROR: --end requires --start');
+    process.exit(1);
+  } else if (options.hours) {
+    hours = parseFloat(options.hours);
+  } else {
+    console.error('ERROR: --hours is required (or pass --start with --end)');
+    process.exit(1);
+  }
+
   const isoDuration = `PT${Math.floor(hours)}H${Math.round((hours % 1) * 60)}M`;
+
+  // spentOn defaults to the local calendar date of --start when given, else today.
+  let spentOn = options.date;
+  if (!spentOn && options.start) {
+    const s = new Date(options.start);
+    spentOn = `${s.getFullYear()}-${String(s.getMonth() + 1).padStart(2, '0')}-${String(s.getDate()).padStart(2, '0')}`;
+  }
+  if (!spentOn) spentOn = new Date().toISOString().substring(0, 10);
 
   const payload = {
     hours: isoDuration,
     comment: options.comment ? { format: 'plain', raw: options.comment } : undefined,
-    spentOn: options.date || new Date().toISOString().substring(0, 10),
+    spentOn,
+    startTime: startISO,
     _links: {
       workPackage: { href: `/api/v3/work_packages/${options.wpId}` },
     },
@@ -853,7 +904,8 @@ async function cmdTimeCreate(options) {
     body: JSON.stringify(payload),
   });
 
-  console.log(`✅ Time logged: ${options.hours}h on WP#${options.wpId}`);
+  console.log(`✅ Time logged: ${Math.round(hours * 100) / 100}h on WP#${options.wpId}`);
+  if (startISO) console.log(`   Start: ${startISO} (finish auto-derived from duration)`);
   console.log(`   ID: ${result.id}`);
 }
 
@@ -2859,9 +2911,11 @@ program.command('time-list').description('List time entries')
 
 program.command('time-create').description('Log time on a work package')
   .requiredOption('--wp-id <id>', 'Work package ID')
-  .requiredOption('--hours <n>', 'Hours spent (e.g. 2.5)')
+  .option('--hours <n>', 'Hours spent (e.g. 2.5); optional if --start and --end are given')
+  .option('--start <time>', 'Start time, ISO 8601 (local tz if no offset), e.g. 2026-09-08T13:00')
+  .option('--end <time>', 'End time, ISO 8601; derives hours from the --start..--end span')
   .option('-c, --comment <text>', 'Comment')
-  .option('--date <YYYY-MM-DD>', 'Date spent (default: today)')
+  .option('--date <YYYY-MM-DD>', 'Date spent (default: today, or the --start date)')
   .option('--activity-id <id>', 'Activity type ID')
   .action(wrap(cmdTimeCreate));
 
