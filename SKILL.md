@@ -25,6 +25,44 @@ OP_DEFAULT_PROJECT=my-project
 
 5. Install dependencies: `cd {baseDir} && npm install`
 
+## Efficient Usage (read this first)
+
+General rules for keeping calls cheap and output readable. Unfiltered queries on a
+mature instance return hundreds of work packages, each with a full `description`
+that may contain large blocks of embedded HTML (tables, mail quotes, figures).
+That output routinely exceeds an agent's tool-output limit and gets truncated.
+
+1. **Always narrow before you list.** Combine `--project`, `--open` / `--closed`,
+   `--status`, and `--assignee` instead of listing everything and filtering later.
+   ```bash
+   node {baseDir}/scripts/openproject.mjs wp-list --project my-project --open
+   ```
+2. **Fetch a known ID directly.** If you already have the ID, use `wp-read --id N`
+   rather than a list command. `wp-read` also prints the parent reference.
+3. **Use `--json` for machine use, but reduce it before reading.** `--json` paginates
+   over the whole result set and includes `description`. Write it to a file and project
+   only the fields you need:
+   ```bash
+   node {baseDir}/scripts/openproject.mjs wp-list --open --json > /tmp/wp.json
+   node -e 'const d=require("/tmp/wp.json");console.log(d.tasks.map(t=>[t.id,t.type,t.status,t.subject].join(" | ")).join("\n"))'
+   ```
+4. **Page size is configurable.** Non-JSON list commands honour `OP_MAX_RESULTS`
+   (default 50). Raise it deliberately; do not assume a single call returned everything.
+   The `--json` path pages through all results at 100 per request.
+5. **There is no `--parent` flag.** To find the children of a parent work package
+   (for example the tasks under a phase), query API v3 directly with a `parent` filter.
+   The `filters` value is JSON and must be URL-encoded:
+   ```bash
+   curl -s -u "apikey:$OP_API_TOKEN" \
+     "$OP_HOST/api/v3/work_packages?pageSize=100&filters=%5B%7B%22parent%22%3A%7B%22operator%22%3A%22%3D%22%2C%22values%22%3A%5B%2242%22%5D%7D%7D%5D"
+   ```
+   Decoded, that filter is `[{"parent":{"operator":"=","values":["42"]}}]`.
+   The same pattern works for any API v3 filter the CLI does not expose.
+6. **`--project` takes the project identifier**, not the display name. Run
+   `project-list` once to map names to identifiers.
+7. **Prefer one narrow query over a broad query plus local search.** Searching a full
+   dump for a keyword wastes a round trip and risks truncation hiding the match.
+
 ## Commands
 
 ### Work Packages
