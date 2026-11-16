@@ -2,7 +2,7 @@
 
 Verified review of the skill against both released and development OpenProject API v3 specifications. The CLI covers common workflows, but has integration bugs and substantial feature gaps. Differences below include existing implementation defects and unimplemented features; they should not all be interpreted as recent upstream changes.
 
-> Sections 1–6 preserve the audit of revision `c4bea85` before the fixes. See section 7 for completed follow-up work and current verification.
+> Sections 1–6 preserve the audit of revision `c4bea85` before the fixes. Sections 7–8 record subsequent fixes and feature implementation; section 8 has the latest verification and coverage totals.
 
 - **Skill version:** 2.0.0 (`package.json`, CLI `--version`)
 - **Project revision reviewed:** [`c4bea8550667f66778d1805e7156d03c9116b8e9`](https://github.com/ALT-F1-OpenClaw/openclaw-skill-openproject/commit/c4bea8550667f66778d1805e7156d03c9116b8e9)
@@ -186,3 +186,28 @@ Minor maintenance aligns the lockfile's root versions with 2.0.0, corrects READM
 The resource table in section 4 retains the original audit snapshot. Membership listing now adds one documented path/operation match (`GET /memberships`), bringing static development-spec matches to **82 paths / 110 operations**. Global capability listing reuses the already-counted `/capabilities` path; render routes remain absent from the development spec despite existing in server source.
 
 CI, a changelog, a complete rewrite of the older coverage inventory, authenticated integration testing, PR #20 and broader API feature coverage remain outstanding.
+
+## 8. Planned feature batch completed — 2026-11-16
+
+The five recommended work areas have been implemented locally in small commits:
+
+| Commit | Completed work |
+|---|---|
+| `2843817` | GitHub Actions CI: syntax and regression checks on Node 18, 20, 22 and 24 for push/PR events. |
+| `bf614f1` | Project update/delete, parent assignment/removal, strict boolean/ID validation and confirmations; work package assignee, dates, milestone date and ISO estimate fields on create/update. |
+| `6e96062` | Membership read/create/update/delete, principal types, complete role replacement and role-title display. |
+| `e017118`, `d8339dd` | Version read/create/update/delete, status/sharing and date clearing. The correction retains `none` through Commander parsing and serializes it to JSON null. |
+| `8943f66` | Meeting list/create/update/delete, paginated JSON listing and optimistic locking. |
+| `a0f1a9d` | Agenda item, outcome and section list/read/create/update/delete; linked work packages, notes, presenters, durations and agenda locking. |
+| `4d67a3b` | User invite/create/update/delete, lock/unlock and self password changes using named environment variables. |
+| `377defc` | Activity/comment read and editing, including optional internal/public flags; allow project slugs beginning with digits. |
+
+**Current state:** 147 commands across 37 README command groups, with **74 passing mocked regression checks**. Syntax, whitespace, workflow parsing and README command-inventory checks pass. Hosted CI is configured; no hosted execution or authenticated integration test is claimed.
+
+The refreshed [API coverage inventory](./API-COVERAGE.md) reports **97 paths / 146 operations** matched against the development snapshot's 258 audited paths / 345 operations, and **99 paths / 148 operations** against the released 17.9.7 snapshot's 229 audited paths / 315 operations. Matching operation counts increased by 36 from the prior fix batch. The table in section 4 remains the original audit snapshot.
+
+The implemented project/work package functionality addresses PR #20's local feature proposal and review concerns. The remote PR has not been merged or closed. Parent removal and other writes are checked through documented contracts and mocked payloads; behavior on the user's deployed instance still requires authenticated integration testing.
+
+README, SKILL.md, API-COVERAGE.md and an Unreleased CHANGELOG describe the new commands. The package/CLI version remains 2.0.0; no release or push has been performed.
+
+Full API parity is still outstanding. Remaining areas include recurring meetings, user availability, sprint/workspace commands, project copy/favorites, form/schema discovery, direct uploads, and the deliberate/development-only exclusions documented in API-COVERAGE.md. CI, the changelog and the coverage rewrite are now completed, superseding the outstanding-work note in section 7.

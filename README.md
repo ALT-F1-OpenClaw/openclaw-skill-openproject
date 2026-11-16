@@ -59,7 +59,8 @@ By [Abdelkrim BOUJRAF](https://www.alt-f1.be) / ALT-F1 SRL, Brussels 🇧🇪 �
 - **Attachments** — List, upload, and delete
 - **Time Entries** — CRUD time tracking with hours, dates, and activity types
 - **Statuses & Transitions** — List statuses, update work package status
-- **Reference Data** — Types, priorities, members, versions, categories
+- **Memberships & Versions** — Create, read, update, delete, and project-scoped listings
+- **Reference Data** — Types, priorities and categories
 - **Wiki Pages** — Read wiki pages, list and upload attachments
 - **Security** — `--confirm` required for deletes, no secrets to stdout, rate-limit retry with backoff
 - **Auth** — API token (works with cloud and self-hosted)
@@ -97,6 +98,7 @@ node scripts/openproject.mjs wp-create --project my-project --subject "My first 
 ## Commands
 
 See [SKILL.md](./SKILL.md) for full command reference.
+See [API-COVERAGE.md](./docs/API-COVERAGE.md) for implemented operations and remaining gaps, and [CHANGELOG.md](./CHANGELOG.md) for unreleased changes.
 
 ### 147 commands across 37 command groups:
 
@@ -173,3 +175,4 @@ Contributions welcome! Please open an issue or PR.
 
 Run the CLI regression checks with `npm test` after installing dependencies. The
 checks mock every API request and do not require an OpenProject instance or token.
+GitHub Actions runs syntax and regression checks on Node 18, 20, 22 and 24.

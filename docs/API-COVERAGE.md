@@ -1,97 +1,123 @@
 # OpenProject API v3 — Coverage & Limitations
 
-> This inventory dates from 2026-03-18. For verified counts, compatibility issues
-> and subsequent fixes, see [Development Status & API Drift — 2026-11-16](./DEVELOPMENT-STATUS-2026-11-16.md).
+Updated 2026-11-16 after implementing CI, project/work package enhancements, membership and version management, meeting content, user administration, and comment editing. The CLI has **147 commands**. This is partial API coverage.
 
-This document lists all 55 API v3 resources, what this skill covers, and what's excluded with reasons.
+## Scope and counts
 
-## ✅ Covered (46 resources)
+| Specification | All paths / operations | Audited paths / operations | Called paths | Called operations |
+|---|---:|---:|---:|---:|
+| [Released 17.9.7](https://github.com/opf/openproject/tree/v17.9.7/docs/api/apiv3) | 234 / 320 | 229 / 315 | 99 | 148 |
+| [Development snapshot `a6da65c1`](https://github.com/opf/openproject/tree/a6da65c1fecf085cb1ee48d36e7052d1879e6f72/docs/api/apiv3) | 263 / 350 | 258 / 345 | 97 | 146 |
 
-| Resource | Commands | Notes |
-|----------|----------|-------|
-| `work_packages` | wp-list, wp-create, wp-read, wp-update, wp-delete | Full CRUD with filters |
-| `projects` | project-list, project-read, project-create | List, read, create |
-| `activities` | comment-list, comment-add | Comments on work packages |
-| `attachments` | attachment-list, attachment-add, attachment-delete | Upload/delete on work packages |
-| `time_entries` | time-list, time-create, time-update, time-delete | Full CRUD |
-| `users` | user-list, user-read, user-me | List/search users, view details, current user |
-| `notifications` | notification-list, notification-read, notification-mark-read, notification-mark-unread | List/read/mark with reason/project/WP filters |
-| `documents` | document-list, document-read, document-update | List, read, update documents |
-| `revisions` | revision-read, revision-list-by-wp | Read revisions, list by WP |
-| `capabilities` | capability-list, capability-global | Permission introspection |
-| `actions` | action-list, action-read | Available actions |
-| `my_preferences` | my-preferences-read, my-preferences-update | Personal preferences |
-| `render` | render-markdown, render-plain | Markdown/plain text rendering |
-| `posts` | post-read, post-attachment-list | Forum posts and attachments |
-| `reminders` | reminder-list, reminder-create, reminder-update, reminder-delete | WP reminders CRUD |
-| `project_statuses` | project-status-read | Project health statuses |
-| `project_phases` | project-phase-read | Read project phases (Enterprise) |
-| `project_phase_definitions` | project-phase-definition-list, project-phase-definition-read | List and read phase definitions (Enterprise) |
-| `portfolios` | portfolio-list, portfolio-read, portfolio-update, portfolio-delete | List, read, update, delete (Enterprise) |
-| `programs` | program-list, program-read, program-update, program-delete | List, read, update, delete (Enterprise) |
-| `placeholder_users` | placeholder-user-list, placeholder-user-read, placeholder-user-create, placeholder-user-update, placeholder-user-delete | Full CRUD (Enterprise) |
-| `budgets` | budget-list, budget-read | List and read project budgets (Enterprise) |
-| `meetings` | meeting-read, meeting-attachment-list, meeting-attachment-add | Read meetings, attachments (Enterprise) |
-| `days` | day-read, days-list, non-working-days-list, non-working-day-read, week-days-list, week-day-read | Working/non-working days and week schedule |
-| `configuration` | config-read, project-config-read | Instance and project configuration |
-| `oauth_applications` | oauth-app-read | Read OAuth application details |
-| `oauth_client_credentials` | oauth-credentials-read | Read OAuth client credentials |
-| `help_texts` | help-text-list, help-text-read | List and read attribute help texts |
-| `custom_fields` | custom-field-items | List hierarchical custom field items |
-| `custom_field_items` | custom-field-item-read, custom-field-item-branch | Read items and browse branches |
-| `custom_options` | custom-option-read | Read custom option values |
-| `custom_actions` | custom-action-read, custom-action-execute | Read and execute workflow actions on WPs |
-| `groups` | group-list, group-read, group-create, group-update, group-delete | Full CRUD with member management |
-| `news` | news-list, news-read, news-create, news-update, news-delete | Full CRUD for project announcements |
-| `watchers` | watcher-list, watcher-add, watcher-remove, watcher-available | List, add, remove watchers on WPs |
-| `relations` | relation-list, relation-read, relation-create, relation-update, relation-delete | Full CRUD with type/WP filters |
-| `wiki_pages` | wiki-read, wiki-attachment-list, wiki-attachment-add | Read page, list & upload attachments |
-| `statuses` | status-list | List all statuses; transitions via wp-update --status |
-| `types` | type-list | List work package types |
-| `priorities` | priority-list | List priorities |
-| `memberships` | member-list | List project members |
-| `versions` | version-list | List versions/milestones |
-| `categories` | category-list | List work package categories |
-| `principals` | (used internally) | User/group resolution |
-| `roles` | (used internally) | Role resolution in member-list |
+An operation is one HTTP method on one path. Counts measure matching calls, not complete workflows or authenticated integration success. They include direct upload calls, variable URLs, conditional create/update paths, and shared resource handlers. Project-scoped calls are counted under `projects`; for example, `version-list` uses a project-scoped version collection rather than `GET /versions`.
 
-## ❌ Not Covered — With Reasons
+The audited scope excludes five framework/documentation paths in each snapshot: root, specification-serving endpoints, value schemas, and documentation examples where present. The development snapshot has 63 resource groups. Stable and development figures differ because their specifications contain different operations; the development branch is not the compatibility baseline for every deployment.
 
-### Queries (`/api/v3/queries`)
-- **Reason:** 24 endpoints for saved work package filters/views. Internal to OpenProject UI. CLI users can use `wp-list` filters directly. Complex schema-based system with limited CLI value.
+## Implemented management workflows
 
-### File Links (`/api/v3/file_links`)
-- **Reason:** External storage integration (Nextcloud, OneDrive, SharePoint). Requires storage integration configured server-side.
+| Area | Available behavior |
+|---|---|
+| Work packages | Existing CRUD and filters; create/update assignee, date ranges, milestone `date`, and ISO 8601 estimates. |
+| Projects | List, read, create, update, delete, and assign/remove parents. Visibility/archive changes and deletion require `--confirm`. |
+| Memberships | Project-scoped listing, read, create, update and delete; user/group/placeholder principals and complete role replacement. |
+| Versions | Project-scoped listing, read, create, update and delete; status, sharing, descriptions and nullable dates. |
+| Meetings | List, read, create, update and delete; attachment listing/upload. Updates use optimistic locking. |
+| Agenda items | List, read, create, update and delete; notes, duration, presenters, sections and linked work packages. Updates use optimistic locking. |
+| Outcomes and sections | List, read, create, update and delete; informational/work package outcomes and section titles. |
+| Users | Existing list/read/me; invite/create, update, delete, lock/unlock and self password changes using environment variables. |
+| Comments | Existing list/add; direct activity read and comment editing, including explicit internal/public flags. |
+| Other established areas | Groups, news, watchers, relations, time entries, documents, reminders, portfolios/programs, placeholder users, calendars, preferences, rendering, configuration and reference data retain their existing support. See the table below for method coverage. |
 
-### Storages & Project Storages (`/api/v3/storages`, `/api/v3/project_storages`)
-- **Reason:** External file storage configuration. Admin-level setup. 13 endpoints for storage provider management.
+Create/update commands expose selected documented fields. Custom-field writes, form/schema discovery, and every optional mutation field are not implied by CRUD support. Global membership creation is not exposed by the project membership commands.
 
-### Grids (`/api/v3/grids`)
-- **Reason:** Dashboard/widget layout configuration. Internal to OpenProject UI rendering. No CLI use case.
+## Development specification: per-resource coverage
 
-### Views (`/api/v3/views`)
-- **Reason:** Saved work package views (Gantt, board, etc.). Internal to OpenProject UI. No CLI equivalent.
+A called path has at least one implemented method. Partial method counts identify remaining operations on otherwise supported resources. URI links in request bodies are not counted as HTTP calls.
 
-### Workspace & Workspaces (`/api/v3/workspace`, `/api/v3/workspaces`)
-- **Reason:** Newer workspace endpoints that mirror project functionality. Read-only metadata.
+| Resource | Called paths / spec paths | Called operations / spec operations |
+|---|---:|---:|
+| `actions` | 2 / 2 | 2 / 2 |
+| `activities` | 1 / 4 | 2 / 7 |
+| `ai_text_actions` | 0 / 1 | 0 / 1 |
+| `ai_text_transform_runs` | 0 / 3 | 0 / 3 |
+| `attachments` | 1 / 4 | 1 / 5 |
+| `budgets` | 1 / 1 | 1 / 1 |
+| `capabilities` | 1 / 3 | 1 / 3 |
+| `categories` | 0 / 1 | 0 / 1 |
+| `configuration` | 1 / 1 | 1 / 1 |
+| `custom_actions` | 2 / 2 | 2 / 2 |
+| `custom_field_items` | 2 / 2 | 2 / 2 |
+| `custom_fields` | 1 / 2 | 1 / 2 |
+| `custom_options` | 1 / 1 | 1 / 1 |
+| `days` | 6 / 6 | 6 / 6 |
+| `documents` | 2 / 3 | 3 / 4 |
+| `file_links` | 0 / 3 | 0 / 4 |
+| `grids` | 0 / 4 | 0 / 6 |
+| `groups` | 2 / 2 | 5 / 5 |
+| `help_texts` | 2 / 2 | 2 / 2 |
+| `labels` | 0 / 2 | 0 / 3 |
+| `meeting_agenda_items` | 2 / 5 | 4 / 7 |
+| `meeting_outcomes` | 2 / 2 | 4 / 4 |
+| `meeting_sections` | 2 / 2 | 4 / 4 |
+| `meetings` | 6 / 15 | 10 / 19 |
+| `memberships` | 2 / 6 | 5 / 9 |
+| `my_preferences` | 1 / 1 | 2 / 2 |
+| `news` | 2 / 2 | 5 / 5 |
+| `notifications` | 6 / 8 | 6 / 8 |
+| `oauth_applications` | 1 / 1 | 1 / 1 |
+| `oauth_client_credentials` | 1 / 1 | 1 / 1 |
+| `placeholder_users` | 2 / 2 | 5 / 5 |
+| `portfolios` | 2 / 3 | 4 / 5 |
+| `posts` | 2 / 3 | 2 / 4 |
+| `principals` | 0 / 3 | 0 / 6 |
+| `priorities` | 1 / 2 | 1 / 2 |
+| `programs` | 2 / 3 | 4 / 5 |
+| `project_phase_definitions` | 2 / 2 | 2 / 2 |
+| `project_phases` | 1 / 1 | 1 / 1 |
+| `project_statuses` | 1 / 1 | 1 / 1 |
+| `project_storages` | 0 / 3 | 0 / 3 |
+| `projects` | 8 / 22 | 11 / 27 |
+| `queries` | 0 / 15 | 0 / 18 |
+| `recurring_meetings` | 0 / 10 | 0 / 13 |
+| `relations` | 2 / 2 | 4 / 4 |
+| `reminders` | 2 / 2 | 3 / 3 |
+| `repository_branches` | 0 / 1 | 0 / 1 |
+| `repository_commits` | 0 / 1 | 0 / 1 |
+| `repository_issues` | 0 / 1 | 0 / 1 |
+| `repository_merge_requests` | 0 / 2 | 0 / 2 |
+| `repository_pipelines` | 0 / 1 | 0 / 1 |
+| `revisions` | 1 / 1 | 1 / 1 |
+| `roles` | 0 / 2 | 0 / 2 |
+| `sprints` | 0 / 2 | 0 / 2 |
+| `statuses` | 1 / 2 | 1 / 2 |
+| `storages` | 0 / 8 | 0 / 11 |
+| `time_entries` | 2 / 7 | 4 / 10 |
+| `types` | 1 / 2 | 1 / 2 |
+| `users` | 3 / 9 | 7 / 19 |
+| `versions` | 2 / 8 | 4 / 11 |
+| `views` | 0 / 2 | 0 / 3 |
+| `wiki_pages` | 2 / 3 | 3 / 4 |
+| `work_packages` | 10 / 26 | 15 / 34 |
+| `workspaces` | 0 / 14 | 0 / 18 |
 
-### Values (`/api/v3/values`)
-- **Reason:** Internal value resolution endpoint. Framework utility, not a user-facing resource.
+Render endpoints are absent from this development specification but remain mounted in upstream server source and are implemented by the CLI. The released capability-context spelling is stale; global capability listing now uses the documented capability collection with context filter `g`.
 
-### Example & Examples (`/api/v3/example`, `/api/v3/examples`)
-- **Reason:** API documentation examples. Not real resources.
+## Remaining gaps and exclusions
 
-## Enterprise-Only Features (All Now Covered ✅)
+- **Projects and workspaces:** project copy/favorites/available parents/assignees, direct workspace commands, and migration from deprecated project-scoped routes.
+- **Meetings:** recurring meetings and occurrences; additional nested read alternatives, forms/schemas, and development-only agenda voting/move operations.
+- **Users:** working hours, non-working times, and user forms/schemas.
+- **Memberships and versions:** forms/schemas, available-project discovery, global memberships, global version listings and version workspace/project listings.
+- **Activities and attachments:** emoji reactions, activity attachments, direct attachment reads, containerless uploads, and the optional direct-to-storage upload flow.
+- **Reference data and helpers:** several individual-resource reads, principal/role listing, and work package form/schema/discovery operations.
+- **Development-only additions:** AI actions/runs, labels, repository resources, principal hourly rates, notification summary, work package PDF export and document collaboration tokens. Verify availability on the target version.
+- **Deliberate exclusions:** saved queries, grids, views, storages/project storages and external file links. These remain unimplemented and are included in the coverage denominators.
+- **Framework/documentation paths:** omitted from the audited denominators as described above.
 
-These require an OpenProject Enterprise license but are implemented in the skill:
-- Meetings — read, attachments
-- Budgets — list, read
-- Placeholder Users — full CRUD
-- Portfolios — list, read, update, delete
-- Programs — list, read, update, delete
-- Project Phases — list definitions, read phases
+Feature availability and permissions depend on the deployed version and instance configuration. Resource presence does not establish that every feature is available under every license.
 
----
+## Verification
 
-*Based on OpenProject API v3 specification (55 resources, 193 endpoints)*
-*Last updated: 2026-03-18 (v2.0.0)*
+`npm test` runs **74 mocked CLI regression checks**. CI runs syntax checks and the test suite on Node 18, 20, 22 and 24 for pushes and pull requests. The workflow has been validated locally; hosted jobs will run when the commits reach GitHub.
+
+Authenticated live-instance checks have not been performed. The original audit and subsequent fix/feature commits are recorded in [Development Status & API Drift](./DEVELOPMENT-STATUS-2026-11-16.md).
