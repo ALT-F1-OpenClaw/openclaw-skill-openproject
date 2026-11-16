@@ -202,6 +202,17 @@ function idList(value) {
 
 function optionalId(value) { return value === 'none' ? value : numericId(value); }
 
+function envName(value) {
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(value)) throw new InvalidArgumentError('Expected an environment variable name');
+  return value;
+}
+
+function envSecret(name) {
+  const value = process.env[name];
+  if (!value) throw new Error(`Set ${name} before changing a password`);
+  return value;
+}
+
 function minutesValue(value) {
   if (value === 'none') return value;
   if (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value))) throw new InvalidArgumentError('Expected whole minutes, or none to clear');
@@ -2369,6 +2380,32 @@ async function cmdUserMe() {
   console.log(`   Updated:     ${u.updatedAt?.substring(0, 10) || '?'}`);
 }
 
+async function cmdUserWrite(options, create = false) {
+  const payload = {};
+  for (const field of ['email', 'login', 'firstName', 'lastName', 'admin', 'language']) {
+    if (options[field] !== undefined) payload[field] = options[field];
+  }
+  if (create) {
+    payload.status = options.status;
+    if (options.status === 'active') {
+      for (const field of ['login', 'firstName', 'lastName']) if (!options[field]) throw new Error(`Active user creation requires --${field.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`)}`);
+      payload.password = envSecret(options.passwordEnv || 'OP_NEW_USER_PASSWORD');
+    } else if (options.passwordEnv) throw new Error('Use --status active with --password-env');
+  } else if (options.passwordEnv) {
+    if (options.id !== 'me') throw new Error('Use --id me for password changes');
+    payload.password = envSecret(options.passwordEnv);
+    payload.currentPassword = envSecret(options.currentPasswordEnv || 'OP_CURRENT_PASSWORD');
+  } else if (options.currentPasswordEnv) throw new Error('--current-password-env requires --password-env');
+  requireChanges(payload);
+  const result = await opFetch(create ? '/users' : `/users/${options.id}`, { method: create ? 'POST' : 'PATCH', body: JSON.stringify(payload) });
+  console.log(`✅ ${create ? 'Created' : 'Updated'} user: ${result?.id || options.id}`);
+}
+
+async function cmdUserLock(options, unlock = false) {
+  await opFetch(`/users/${options.id}/lock`, { method: unlock ? 'DELETE' : 'POST' });
+  console.log(`✅ ${unlock ? 'Unlocked' : 'Locked'} user: ${options.id}`);
+}
+
 // ── Relation commands ────────────────────────────────────────────────────────
 
 const RELATION_TYPES = [
@@ -2803,6 +2840,38 @@ program.command('user-read').description('Read user details')
 
 program.command('user-me').description('Show current authenticated user')
   .action(wrap(cmdUserMe));
+
+for (const action of ['create', 'update']) {
+  const command = program.command(`user-${action}`).description(`${action === 'create' ? 'Create or invite' : 'Update'} a user`);
+  if (action === 'create') {
+    command.requiredOption('--email <email>', 'Email address')
+      .option('--status <status>', 'invited (email only) or active', choice('invited', 'active'), 'invited')
+      .option('--admin <bool>', 'Administrator (true/false)', booleanValue, false)
+      .option('--language <code>', 'Language code', 'en');
+  } else {
+    command.requiredOption('--id <id>', 'User ID, or me', value => value === 'me' ? value : numericId(value))
+      .option('--email <email>', 'Email address')
+      .option('--admin <bool>', 'Administrator (true/false)', booleanValue)
+      .option('--language <code>', 'Language code')
+      .option('--current-password-env <name>', 'Current-password variable for self changes (default: OP_CURRENT_PASSWORD)', envName);
+  }
+  command.option('--login <login>', 'Login name')
+    .option('--first-name <name>', 'First name')
+    .option('--last-name <name>', 'Last name')
+    .option('--password-env <name>', 'Password variable (active creation defaults to OP_NEW_USER_PASSWORD)', envName)
+    .action(wrap(options => cmdUserWrite(options, action === 'create')));
+}
+
+program.command('user-delete').description('Delete a user')
+  .requiredOption('--id <id>', 'User ID', numericId)
+  .option('--confirm', 'Confirm deletion')
+  .action(wrap(options => cmdResourceDelete(options, 'users')));
+
+for (const action of ['lock', 'unlock']) {
+  program.command(`user-${action}`).description(`${action === 'lock' ? 'Lock' : 'Unlock'} a user`)
+    .requiredOption('--id <id>', 'User ID', numericId)
+    .action(wrap(options => cmdUserLock(options, action === 'unlock')));
+}
 
 // Documents
 program.command('document-list').description('List documents')

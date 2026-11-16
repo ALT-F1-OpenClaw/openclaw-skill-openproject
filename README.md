@@ -29,7 +29,7 @@ By [Abdelkrim BOUJRAF](https://www.alt-f1.be) / ALT-F1 SRL, Brussels 🇧🇪 �
 
 - **Work Packages** — Create, read, update, delete, list with filters (status, assignee, type)
 - **Projects** — List, read, create, update, delete, and set/remove parents
-- **Users** — List, search, read user details, view current user
+- **Users** — List, search, read, invite/create, update, delete, lock/unlock and self password changes
 - **Documents** — List, read, update documents
 - **Revisions** — Read revisions, list by work package
 - **Capabilities & Actions** — Permission introspection, list available actions
@@ -98,13 +98,13 @@ node scripts/openproject.mjs wp-create --project my-project --subject "My first 
 
 See [SKILL.md](./SKILL.md) for full command reference.
 
-### 140 commands across 37 command groups:
+### 145 commands across 37 command groups:
 
 | Entity | Commands |
 |--------|----------|
 | Work Packages | `wp-list`, `wp-create`, `wp-read`, `wp-update`, `wp-delete` |
 | Projects | `project-list`, `project-read`, `project-create`, `project-update`, `project-delete` |
-| Users | `user-list`, `user-read`, `user-me` |
+| Users | `user-list`, `user-read`, `user-me`, `user-create`, `user-update`, `user-delete`, `user-lock`, `user-unlock` |
 | Documents | `document-list`, `document-read`, `document-update` |
 | Revisions | `revision-read`, `revision-list-by-wp` |
 | Capabilities | `capability-list`, `capability-global`, `action-list`, `action-read` |

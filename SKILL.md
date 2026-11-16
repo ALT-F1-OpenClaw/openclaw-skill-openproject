@@ -141,7 +141,22 @@ node {baseDir}/scripts/openproject.mjs user-read --id 5
 
 # Show current authenticated user
 node {baseDir}/scripts/openproject.mjs user-me
+
+# Invite a user (default status: invited; sends an invitation email)
+node {baseDir}/scripts/openproject.mjs user-create --email ada@alt-f1.be
+
+# Set OP_NEW_USER_PASSWORD first; passwords are read from environment variables
+node {baseDir}/scripts/openproject.mjs user-create --status active --email ada@alt-f1.be --login ada --first-name Ada --last-name Lovelace --password-env OP_NEW_USER_PASSWORD
+node {baseDir}/scripts/openproject.mjs user-update --id 5 --first-name Ada --admin false
+node {baseDir}/scripts/openproject.mjs user-lock --id 5
+node {baseDir}/scripts/openproject.mjs user-unlock --id 5
+node {baseDir}/scripts/openproject.mjs user-delete --id 5 --confirm
+
+# Self password changes require OP_CURRENT_PASSWORD as well
+node {baseDir}/scripts/openproject.mjs user-update --id me --password-env OP_NEW_USER_PASSWORD
 ```
+
+User status is set on creation; use lock/unlock commands for later activation changes. Password changes use `--id me`; `--current-password-env` selects a current-password variable other than `OP_CURRENT_PASSWORD`.
 
 ### Notifications
 
