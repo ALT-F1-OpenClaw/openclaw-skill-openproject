@@ -170,6 +170,8 @@ node {baseDir}/scripts/openproject.mjs revision-list-by-wp --wp-id 42
 
 ```bash
 node {baseDir}/scripts/openproject.mjs capability-list --principal me
+node {baseDir}/scripts/openproject.mjs capability-list --context global
+node {baseDir}/scripts/openproject.mjs capability-list --context 9
 node {baseDir}/scripts/openproject.mjs capability-global
 node {baseDir}/scripts/openproject.mjs action-list
 node {baseDir}/scripts/openproject.mjs action-read --id work_packages/create

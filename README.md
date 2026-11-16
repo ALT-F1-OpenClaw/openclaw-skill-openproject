@@ -98,7 +98,7 @@ node scripts/openproject.mjs wp-create --project my-project --subject "My first 
 
 See [SKILL.md](./SKILL.md) for full command reference.
 
-### 120 commands across 35 entities:
+### 111 commands across 34 command groups:
 
 | Entity | Commands |
 |--------|----------|
@@ -167,3 +167,6 @@ Abdelkrim BOUJRAF — [ALT-F1 SRL](https://www.alt-f1.be), Brussels 🇧🇪 �
 ## Contributing
 
 Contributions welcome! Please open an issue or PR.
+
+Run the CLI regression checks with `npm test` after installing dependencies. The
+checks mock every API request and do not require an OpenProject instance or token.

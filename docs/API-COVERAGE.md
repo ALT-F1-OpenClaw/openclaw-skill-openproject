@@ -1,5 +1,8 @@
 # OpenProject API v3 — Coverage & Limitations
 
+> This inventory dates from 2026-03-18. For verified counts, compatibility issues
+> and subsequent fixes, see [Development Status & API Drift — 2026-11-16](./DEVELOPMENT-STATUS-2026-11-16.md).
+
 This document lists all 55 API v3 resources, what this skill covers, and what's excluded with reasons.
 
 ## ✅ Covered (46 resources)

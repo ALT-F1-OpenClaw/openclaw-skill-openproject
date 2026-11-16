@@ -2,6 +2,8 @@
 
 Verified review of the skill against both released and development OpenProject API v3 specifications. The CLI covers common workflows, but has integration bugs and substantial feature gaps. Differences below include existing implementation defects and unimplemented features; they should not all be interpreted as recent upstream changes.
 
+> Sections 1–6 preserve the audit of revision `c4bea85` before the fixes. See section 7 for completed follow-up work and current verification.
+
 - **Skill version:** 2.0.0 (`package.json`, CLI `--version`)
 - **Project revision reviewed:** [`c4bea8550667f66778d1805e7156d03c9116b8e9`](https://github.com/ALT-F1-OpenClaw/openclaw-skill-openproject/commit/c4bea8550667f66778d1805e7156d03c9116b8e9)
 - **Released specification:** [`opf/openproject` v17.9.7](https://github.com/opf/openproject/tree/v17.9.7/docs/api/apiv3), the latest release at the time of review, published 2026-11-09
@@ -166,3 +168,21 @@ The corrected days count is **6/6**, and notifications **6/8**. The earlier extr
 - `node --check`, CLI `--version` and help checks passed. Installed the two locked dependencies in a temporary copy outside the repository. Ran **14 mocked checks**: normal work package JSON dates; open/closed operators; unknown-status rejection; multi-page JSON aggregation; reproduction of the capability response-shape crash; reproduction of both render commands printing `null`; days listing; both bulk notification operations; and all three upload POSTs. Assertions of reproduced defects passed; this does not mean those commands are fixed.
 - Made anonymous, read-only GET requests to the public community instance: singular capability-context route 404, plural route 200; project-scoped memberships 404 for an existing public project, filtered `/memberships` 200. The empty membership collection reflects anonymous access and does not validate authenticated member visibility.
 - No authenticated integration checks were performed against the user's deployed instance, and no application code was changed. The temporary audit harness is not committed; automated tests, CI and the implementation fixes remain outstanding.
+
+## 7. Follow-up fixes — 2026-11-16
+
+The three integration defects identified above are fixed in separate commits:
+
+| Commit | Change |
+|---|---|
+| `69b5ad8` | `capability-global` queries `/capabilities` with context `g` instead of treating context metadata as a collection. `capability-list --context global` maps to `g`, numeric workspace IDs map to `w<ID>`, and explicit API contexts remain supported. |
+| `8a53488` | `member-list` resolves a project slug or ID and queries `/memberships` with the numeric project filter. Explicit and default projects are supported. |
+| `a334e25` | The HTTP client preserves non-JSON responses, and both render commands request `text/html` and print the HTML returned by the API. JSON and plain text error reporting is retained. |
+
+Added `npm test` with **12 committed regression checks** covering capability collections and context filters, membership lookup/filtering/defaults/errors, both rendering commands and text HTTP errors. All 12 checks pass. Every API request is mocked; no instance credentials are required. Syntax and whitespace checks also pass.
+
+Minor maintenance aligns the lockfile's root versions with 2.0.0, corrects README to 111 commands across 34 command groups, documents the regression command and capability filters, and points the older coverage inventory to this report. These changes do not constitute a version bump.
+
+The resource table in section 4 retains the original audit snapshot. Membership listing now adds one documented path/operation match (`GET /memberships`), bringing static development-spec matches to **82 paths / 110 operations**. Global capability listing reuses the already-counted `/capabilities` path; render routes remain absent from the development spec despite existing in server source.
+
+CI, a changelog, a complete rewrite of the older coverage inventory, authenticated integration testing, PR #20 and broader API feature coverage remain outstanding.
