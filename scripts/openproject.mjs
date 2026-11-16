@@ -885,7 +885,9 @@ async function cmdVersionList(options) {
 
 async function cmdVersionWrite(options, create = false) {
   const payload = {};
-  for (const field of ['name', 'status', 'sharing', 'startDate', 'endDate']) if (options[field] !== undefined) payload[field] = options[field];
+  for (const field of ['name', 'status', 'sharing', 'startDate', 'endDate']) {
+    if (options[field] !== undefined) payload[field] = ['startDate', 'endDate'].includes(field) && options[field] === 'none' ? null : options[field];
+  }
   if (options.description !== undefined) payload.description = { format: 'markdown', raw: options.description };
   if (payload.startDate && payload.endDate && payload.startDate > payload.endDate) throw new Error('--end-date must be on or after --start-date');
   if (create || options.project !== undefined) payload._links = { definingProject: { href: `/api/v3/projects/${await resolveProject(options.project)}` } };
@@ -2683,8 +2685,8 @@ for (const action of ['create', 'update']) {
     .option('--description <text>', 'Description (empty string clears it)')
     .option('--status <status>', 'open, locked or closed', choice('open', 'locked', 'closed'))
     .option('--sharing <sharing>', 'none, descendants, hierarchy, tree or system', choice('none', 'descendants', 'hierarchy', 'tree', 'system'))
-    .option('--start-date <date>', 'YYYY-MM-DD, or none to clear', value => value === 'none' ? null : dateValue(value))
-    .option('--end-date <date>', 'YYYY-MM-DD, or none to clear', value => value === 'none' ? null : dateValue(value))
+    .option('--start-date <date>', 'YYYY-MM-DD, or none to clear', value => value === 'none' ? value : dateValue(value))
+    .option('--end-date <date>', 'YYYY-MM-DD, or none to clear', value => value === 'none' ? value : dateValue(value))
     .action(wrap(options => cmdVersionWrite(options, action === 'create')));
 }
 
