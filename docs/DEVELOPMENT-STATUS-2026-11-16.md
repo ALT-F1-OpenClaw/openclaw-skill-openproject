@@ -2,7 +2,7 @@
 
 Verified review of the skill against both released and development OpenProject API v3 specifications. The CLI covers common workflows, but has integration bugs and substantial feature gaps. Differences below include existing implementation defects and unimplemented features; they should not all be interpreted as recent upstream changes.
 
-> Sections 1–6 preserve the audit of revision `c4bea85` before the fixes. Sections 7–9 record subsequent work; section 9 has the latest verification and coverage totals.
+> Sections 1–6 preserve the audit of revision `c4bea85` before the fixes. Sections 7–9 record subsequent work and coverage totals; section 10 records release 2.1.0 and its validation.
 
 - **Skill version:** 2.0.0 (`package.json`, CLI `--version`)
 - **Project revision reviewed:** [`c4bea8550667f66778d1805e7156d03c9116b8e9`](https://github.com/ALT-F1-OpenClaw/openclaw-skill-openproject/commit/c4bea8550667f66778d1805e7156d03c9116b8e9)
@@ -227,3 +227,9 @@ Prioritized practical work package planning and lookup workflows. This prioritiz
 The released time-activity specification uses singular `activity`, while the released server and request spec use plural `activities`. The CLI follows the server route. Both anonymous public lookups returned 404; those responses do not establish successful access or routing. Source/request-spec verification resolves the spelling, and literal released-spec coverage excludes that operation. See API-COVERAGE.md for source links.
 
 Remaining work is still substantial: recurring meetings, user availability, broader workspace operations, project copy/favorites, forms/schemas, direct uploads, and deliberately excluded/development-only resource groups. No push, release or authenticated integration test was performed. The unrelated untracked MCP server plan is outside this batch.
+
+## 10. Release 2.1.0 — 2026-11-16
+
+Prepared the minor release as `v2.1.0`, including the fixes and feature batches recorded above. Package metadata, root lockfile metadata and CLI `--version` agree on 2.1.0; CHANGELOG.md contains the dated release notes.
+
+The final release checks pass: all **99 mocked regression tests**, JavaScript syntax, version consistency and whitespace checks. The release contains 166 commands, with the coverage totals from section 9. Authenticated live-instance integration testing remains outstanding. The unrelated MCP server plan is not part of the release commit.

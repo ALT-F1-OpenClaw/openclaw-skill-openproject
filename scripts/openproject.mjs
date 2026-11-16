@@ -2703,7 +2703,7 @@ const program = new Command();
 program
   .name('openproject')
   .description('OpenClaw OpenProject Skill — project management via API v3')
-  .version('2.0.0');
+  .version('2.1.0');
 
 // Work Packages
 program.command('wp-list').description('List work packages')

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.1.0 — 2026-11-16
 
 - Add CI for syntax checks and mocked CLI regressions on Node 18, 20, 22 and 24.
 - Add project updates/deletion and parent assignment/removal, with strict booleans and confirmation for visibility/archive changes.
@@ -16,4 +16,4 @@
 - Add 99 mocked regression checks and refresh the API coverage/status documentation.
 - Align package lockfile metadata and README counts; replace former example host references with ALT-F1 examples.
 
-The package and CLI remain at version 2.0.0 until a release is prepared. The API remains partially implemented; see [API coverage](docs/API-COVERAGE.md).
+The API remains partially implemented; see [API coverage](docs/API-COVERAGE.md).
