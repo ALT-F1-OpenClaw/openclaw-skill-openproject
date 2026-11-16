@@ -18,7 +18,7 @@ Manage OpenProject work packages, projects, groups, news, users, watchers, relat
 4. Set environment variables (or create `.env` in `{baseDir}`):
 
 ```
-OP_HOST=https://projects.xflowdata.com
+OP_HOST=https://projects.alt-f1.be
 OP_API_TOKEN=your-api-token
 OP_DEFAULT_PROJECT=my-project
 ```

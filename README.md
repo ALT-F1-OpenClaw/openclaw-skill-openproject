@@ -90,7 +90,7 @@ node scripts/openproject.mjs wp-create --project my-project --subject "My first 
 2. Go to **My Account → Access Tokens → + Add**
 3. Create an API token and copy it
 4. Copy `.env.example` to `.env` and fill in:
-   - `OP_HOST` — your OpenProject URL (e.g. `https://projects.xflowdata.com`)
+   - `OP_HOST` — your OpenProject URL (e.g. `https://projects.alt-f1.be`)
    - `OP_API_TOKEN` — the API token you just created
    - `OP_DEFAULT_PROJECT` — (optional) default project identifier
 
