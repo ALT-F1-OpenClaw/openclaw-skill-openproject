@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.1 — 2026-11-16
+
+- Add the MCP server proposal covering architecture, phased implementation, configuration and testing.
+- Keep the proposal separate from implemented API coverage; the CLI retains 166 commands.
+
 ## 2.1.0 — 2026-11-16
 
 - Add CI for syntax checks and mocked CLI regressions on Node 18, 20, 22 and 24.
