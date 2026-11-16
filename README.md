@@ -61,6 +61,7 @@ By [Abdelkrim BOUJRAF](https://www.alt-f1.be) / ALT-F1 SRL, Brussels 🇧🇪 �
 - **Statuses & Transitions** — List statuses, update work package status
 - **Memberships & Versions** — Create, read, update, delete, and project-scoped listings
 - **Reference Data** — Types, priorities and categories
+- **Sprints** — Browse visible or project-shared sprints and read sprint details
 - **Wiki Pages** — Read wiki pages, list and upload attachments
 - **Security** — `--confirm` required for deletes, no secrets to stdout, rate-limit retry with backoff
 - **Auth** — API token (works with cloud and self-hosted)
@@ -100,7 +101,7 @@ node scripts/openproject.mjs wp-create --project my-project --subject "My first 
 See [SKILL.md](./SKILL.md) for full command reference.
 See [API-COVERAGE.md](./docs/API-COVERAGE.md) for implemented operations and remaining gaps, and [CHANGELOG.md](./CHANGELOG.md) for unreleased changes.
 
-### 161 commands across 39 command groups:
+### 166 commands across 40 command groups:
 
 | Entity | Commands |
 |--------|----------|
@@ -109,6 +110,7 @@ See [API-COVERAGE.md](./docs/API-COVERAGE.md) for implemented operations and rem
 | Users | `user-list`, `user-read`, `user-me`, `user-create`, `user-update`, `user-delete`, `user-lock`, `user-unlock` |
 | Roles | `role-list`, `role-read` |
 | Principals | `principal-list` |
+| Sprints | `sprint-list`, `sprint-read` |
 | Documents | `document-list`, `document-read`, `document-update` |
 | Revisions | `revision-read`, `revision-list-by-wp` |
 | Capabilities | `capability-list`, `capability-global`, `action-list`, `action-read` |
@@ -139,7 +141,7 @@ See [API-COVERAGE.md](./docs/API-COVERAGE.md) for implemented operations and rem
 | Notifications | `notification-list`, `notification-read`, `notification-mark-read`, `notification-mark-unread` |
 | Comments | `comment-list`, `comment-add`, `comment-read`, `comment-update` |
 | Attachments | `attachment-list`, `attachment-read`, `attachment-add`, `attachment-delete` |
-| Time Entries | `time-list`, `time-create`, `time-update`, `time-delete` |
+| Time Entries | `time-list`, `time-read`, `time-create`, `time-update`, `time-delete`, `time-activity-read`, `time-projects` |
 | Wiki Pages | `wiki-read`, `wiki-attachment-list`, `wiki-attachment-add` |
 | Statuses/Transitions | `status-list`, `status-read` + `wp-update --status` |
 | Reference Data | `type-list`, `type-read`, `priority-list`, `priority-read`, `member-list`, `member-read`, `member-create`, `member-update`, `member-delete`, `version-list`, `version-read`, `version-create`, `version-update`, `version-delete`, `category-list`, `category-read` |

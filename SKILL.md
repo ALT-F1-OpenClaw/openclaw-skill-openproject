@@ -129,6 +129,9 @@ node {baseDir}/scripts/openproject.mjs attachment-delete --id 10 --confirm
 ```bash
 # List time entries
 node {baseDir}/scripts/openproject.mjs time-list --project my-project
+node {baseDir}/scripts/openproject.mjs time-read --id 5
+node {baseDir}/scripts/openproject.mjs time-activity-read --id 1
+node {baseDir}/scripts/openproject.mjs time-projects
 
 # Log time
 node {baseDir}/scripts/openproject.mjs time-create --wp-id 42 --hours 2.5 --comment "Code review" --activity-id 1
@@ -178,6 +181,17 @@ node {baseDir}/scripts/openproject.mjs user-update --id me --password-env OP_NEW
 ```
 
 User status is set on creation; use lock/unlock commands for later activation changes. Password changes use `--id me`; `--current-password-env` selects a current-password variable other than `OP_CURRENT_PASSWORD`.
+
+### Sprints
+
+```bash
+node {baseDir}/scripts/openproject.mjs sprint-list --page 1
+node {baseDir}/scripts/openproject.mjs sprint-list --project my-project
+node {baseDir}/scripts/openproject.mjs sprint-list --defined-in my-project
+node {baseDir}/scripts/openproject.mjs sprint-read --id 3
+```
+
+Without `--project`, sprint listing spans visible projects and ignores `OP_DEFAULT_PROJECT`. Project-scoped listing includes shared sprints; `--defined-in` filters by the defining project. Results retain the API's JSON pagination metadata.
 
 ### Notifications
 

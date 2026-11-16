@@ -321,6 +321,14 @@ async function cmdPrincipalList(options) {
   await cmdCollectionRead('/principals', { pageSize: CFG.maxResults, offset: options.page || 1, filters: filters.length ? filters : undefined });
 }
 
+async function cmdSprintList(options) {
+  const projectId = options.project ? await resolveProject(options.project) : undefined;
+  const path = projectId ? `/projects/${projectId}/sprints` : '/sprints';
+  const definingId = options.definedIn ? await resolveProject(options.definedIn) : undefined;
+  const filters = definingId ? [{ definingWorkspace: { operator: '=', values: [definingId] } }] : undefined;
+  await cmdCollectionRead(path, { pageSize: CFG.maxResults, offset: options.page || 1, filters });
+}
+
 async function cmdResourceDelete(options, resource) {
   requireConfirm(options, `Deleting ${resource}`);
   await opFetch(`/${resource}/${options.id}`, { method: 'DELETE' });
@@ -2869,6 +2877,9 @@ program.command('time-delete').description('Delete a time entry (requires --conf
   .option('--confirm', 'Confirm deletion (required)')
   .action(wrap(cmdTimeDelete));
 
+program.command('time-projects').description('List projects available for time tracking as JSON')
+  .action(wrap(() => cmdCollectionRead('/time_entries/available_projects')));
+
 // Reference Data
 program.command('status-list').description('List all statuses').action(wrap(cmdStatusList));
 program.command('type-list').description('List work package types')
@@ -2880,6 +2891,7 @@ program.command('priority-list').description('List priorities').action(wrap(cmdP
 for (const [command, resource] of [
   ['status-read', 'statuses'], ['type-read', 'types'], ['priority-read', 'priorities'], ['category-read', 'categories'],
   ['role-read', 'roles'], ['custom-field-read', 'custom_fields'], ['attachment-read', 'attachments'],
+  ['time-read', 'time_entries'], ['time-activity-read', 'time_entries/activities'],
 ]) {
   program.command(command).description(`Read ${resource.replaceAll('_', ' ')} metadata as JSON`)
     .requiredOption('--id <id>', 'Resource ID', numericId)
@@ -2897,6 +2909,16 @@ program.command('principal-list').description('Search users, groups and placehol
   .option('--project <id>', 'Filter by project membership', projectRef)
   .option('--page <number>', 'Page number (default: 1)', numericId)
   .action(wrap(cmdPrincipalList));
+
+program.command('sprint-list').description('List visible sprints as JSON')
+  .option('--project <id>', 'Project ID or identifier; includes shared sprints', projectRef)
+  .option('--defined-in <id>', 'Filter by defining project ID or identifier', projectRef)
+  .option('--page <number>', 'Page number (default: 1)', numericId)
+  .action(wrap(cmdSprintList));
+
+program.command('sprint-read').description('Read a sprint as JSON')
+  .requiredOption('--id <id>', 'Sprint ID', numericId)
+  .action(wrap(options => cmdResourceRead(options, 'sprints')));
 
 program.command('member-list').description('List project members')
   .option('-p, --project <id>', 'Project identifier')
