@@ -27,7 +27,7 @@ By [Abdelkrim BOUJRAF](https://www.alt-f1.be) / ALT-F1 SRL, Brussels 🇧🇪 �
 
 ## Features
 
-- **Work Packages** — Create, read, update, delete, list with filters (status, assignee, type)
+- **Work Packages** — CRUD, name/ID filters, assignment, parents, categories, target versions, scheduling, project moves and progress
 - **Projects** — List, read, create, update, delete, and set/remove parents
 - **Users** — List, search, read, invite/create, update, delete, lock/unlock and self password changes
 - **Documents** — List, read, update documents

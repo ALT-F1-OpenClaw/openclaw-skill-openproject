@@ -151,6 +151,7 @@ function halId(obj, rel) {
 // Normalize a work package into a flat JSON object with the fields the API
 // already returns but the human-readable output omits (start/due dates, description).
 function normalizeWp(wp) {
+  const versions = wp._links?.targetVersions ?? (wp._links?.version?.href ? [wp._links.version] : []);
   return {
     id: wp.id,
     subject: wp.subject,
@@ -158,6 +159,15 @@ function normalizeWp(wp) {
     status: halLink(wp, 'status'),
     priority: halLink(wp, 'priority'),
     assignee: wp?._links?.assignee?.title || null,
+    assigneeId: halId(wp, 'assignee'),
+    responsible: wp._links?.responsible?.title || null,
+    responsibleId: halId(wp, 'responsible'),
+    parentId: halId(wp, 'parent'),
+    category: wp._links?.category?.title || null,
+    categoryId: halId(wp, 'category'),
+    versionIds: versions.map(link => link.href?.match(/\/(\d+)$/)?.[1]).filter(Boolean),
+    estimatedTime: wp.estimatedTime ?? null,
+    remainingTime: wp.remainingTime ?? null,
     project: halLink(wp, 'project'),
     projectId: halId(wp, 'project'),
     startDate: wp.startDate || null,
@@ -227,6 +237,14 @@ function dateValue(value) {
   return value;
 }
 
+function nullableDate(value) { return value === 'none' ? value : dateValue(value); }
+function nullableDuration(value) { return value === 'none' ? value : durationValue(value); }
+
+function percentageValue(value) {
+  if (!/^\d+$/.test(value) || Number(value) > 100) throw new InvalidArgumentError('Expected a whole percentage from 0 to 100');
+  return Number(value);
+}
+
 function durationValue(value) {
   if (!/^P(?=\d|T\d)(?:\d+D)?(?:T(?=\d)(?:\d+(?:\.\d+)?H)?(?:\d+(?:\.\d+)?M)?(?:\d+(?:\.\d+)?S)?)?$/.test(value)) {
     throw new InvalidArgumentError('Expected an ISO 8601 duration, e.g. PT2H30M');
@@ -279,13 +297,34 @@ function wpSchedule(options) {
   if (options.date !== undefined && (options.startDate !== undefined || options.dueDate !== undefined)) {
     throw new Error('Use --date for milestones, or --start-date/--due-date for other work packages');
   }
-  if (options.startDate && options.dueDate && options.startDate > options.dueDate) {
+  if (options.startDate && options.startDate !== 'none' && options.dueDate && options.dueDate !== 'none' && options.startDate > options.dueDate) {
     throw new Error('--due-date must be on or after --start-date');
   }
   const payload = {};
-  for (const field of ['startDate', 'dueDate', 'date']) if (options[field] !== undefined) payload[field] = options[field];
-  if (options.estimate !== undefined) payload.estimatedTime = options.estimate;
+  for (const field of ['startDate', 'dueDate', 'date']) if (options[field] !== undefined) payload[field] = options[field] === 'none' ? null : options[field];
+  for (const [option, field] of [['estimate', 'estimatedTime'], ['remaining', 'remainingTime']]) {
+    if (options[option] !== undefined) payload[field] = options[option] === 'none' ? null : options[option];
+  }
+  if (options.scheduleManually !== undefined) payload.scheduleManually = options.scheduleManually;
   return payload;
+}
+
+function wpLinks(options) {
+  const links = {};
+  for (const [field, resource] of [['assignee', 'users'], ['responsible', 'users'], ['parent', 'work_packages'], ['category', 'categories']]) {
+    if (options[field] !== undefined) links[field] = { href: options[field] === 'none' ? null : `/api/v3/${resource}/${options[field]}` };
+  }
+  if (options.targetVersion !== undefined) links.targetVersions = options.targetVersion === 'none' ? [] : [{ href: `/api/v3/versions/${options.targetVersion}` }];
+  return links;
+}
+
+async function resolveNamedId(path, value, label) {
+  if (/^\d+$/.test(value)) return numericId(value, label);
+  const result = await opFetch(path);
+  const elements = result._embedded?.elements || [];
+  const match = elements.find(item => item.name.toLowerCase() === value.toLowerCase());
+  if (!match) throw new Error(`No ${label} named "${value}". Available: ${elements.map(item => item.name).join(', ')}`);
+  return String(match.id);
 }
 
 async function cmdWpList(options) {
@@ -293,6 +332,7 @@ async function cmdWpList(options) {
   const filters = [];
 
   if (project) {
+    projectRef(project);
     const projResp = await opFetch(`/projects/${project}`);
     filters.push({ project: { operator: '=', values: [String(projResp.id)] } });
   }
@@ -300,16 +340,8 @@ async function cmdWpList(options) {
     // OpenProject native meta-filter: 'o' = any open status, 'c' = any closed status
     filters.push({ status: { operator: options.closed ? 'c' : 'o', values: [] } });
   } else if (options.status) {
-    // Resolve status name to ID (exact, case-insensitive)
-    const statuses = await opFetch('/statuses');
-    const match = statuses._embedded.elements.find(
-      s => s.name.toLowerCase() === options.status.toLowerCase()
-    );
-    if (!match) {
-      const names = statuses._embedded.elements.map(s => s.name).join(', ');
-      throw new Error(`No status named "${options.status}". Available: ${names}. For all open/closed items use --open or --closed.`);
-    }
-    filters.push({ status: { operator: '=', values: [String(match.id)] } });
+    const id = await resolveNamedId('/statuses', options.status, 'status');
+    filters.push({ status: { operator: '=', values: [id] } });
   }
   if (options.assignee === 'me') {
     filters.push({ assignee: { operator: '=', values: ['me'] } });
@@ -317,7 +349,8 @@ async function cmdWpList(options) {
     filters.push({ assignee: { operator: '=', values: [options.assignee] } });
   }
   if (options.type) {
-    filters.push({ type: { operator: '=', values: [options.type] } });
+    const id = await resolveNamedId(project ? `/projects/${project}/types` : '/types', options.type, 'type');
+    filters.push({ type: { operator: '=', values: [id] } });
   }
 
   const filterParam = filters.length ? `&filters=${encodeURIComponent(JSON.stringify(filters))}` : '';
@@ -358,11 +391,12 @@ async function cmdWpList(options) {
 }
 
 async function cmdWpCreate(options) {
-  const project = projectRef(options.project || CFG.defaultProject || '');
+  const project = options.project || CFG.defaultProject;
   if (!project) {
     console.error('ERROR: --project is required (or set OP_DEFAULT_PROJECT)');
     process.exit(1);
   }
+  projectRef(project);
   if (!options.subject) {
     console.error('ERROR: --subject is required');
     process.exit(1);
@@ -371,12 +405,8 @@ async function cmdWpCreate(options) {
   const payload = {
     subject: options.subject,
     ...wpSchedule(options),
-    _links: {
-      type: { href: null },
-      priority: { href: null },
-    },
+    _links: wpLinks(options),
   };
-  if (options.assignee !== undefined) payload._links.assignee = { href: `/api/v3/users/${options.assignee}` };
 
   if (options.description) {
     payload.description = { format: 'markdown', raw: options.description };
@@ -384,25 +414,17 @@ async function cmdWpCreate(options) {
 
   // Resolve type
   if (options.type) {
-    const types = await opFetch(`/projects/${project}/types`);
-    const match = types._embedded.elements.find(
-      t => t.name.toLowerCase() === options.type.toLowerCase()
-    );
-    if (match) payload._links.type = { href: `/api/v3/types/${match.id}` };
+    const id = await resolveNamedId(`/projects/${project}/types`, options.type, 'type');
+    payload._links.type = { href: `/api/v3/types/${id}` };
   }
 
   // Resolve priority
   if (options.priority) {
-    const priorities = await opFetch('/priorities');
-    const match = priorities._embedded.elements.find(
-      p => p.name.toLowerCase() === options.priority.toLowerCase()
-    );
-    if (match) payload._links.priority = { href: `/api/v3/priorities/${match.id}` };
+    const id = await resolveNamedId('/priorities', options.priority, 'priority');
+    payload._links.priority = { href: `/api/v3/priorities/${id}` };
   }
+  if (options.status) payload._links.status = { href: `/api/v3/statuses/${await resolveNamedId('/statuses', options.status, 'status')}` };
 
-  // Clean null links
-  if (!payload._links.type.href) delete payload._links.type;
-  if (!payload._links.priority.href) delete payload._links.priority;
   if (Object.keys(payload._links).length === 0) delete payload._links;
 
   const result = await opFetch(`/projects/${project}/work_packages`, {
@@ -458,41 +480,33 @@ async function cmdWpUpdate(options) {
   const schedule = wpSchedule(options);
   // Get current work package for lockVersion
   const current = await opFetch(`/work_packages/${options.id}`);
-  const payload = { lockVersion: current.lockVersion, ...schedule, _links: {} };
-  if (options.assignee !== undefined) payload._links.assignee = { href: options.assignee === 'none' ? null : `/api/v3/users/${options.assignee}` };
+  if (!Number.isInteger(current.lockVersion)) throw new Error('API response is missing lockVersion; update cancelled');
+  const payload = { lockVersion: current.lockVersion, ...schedule, _links: wpLinks(options) };
+  const projectId = options.project !== undefined ? await resolveProject(options.project) : halId(current, 'project');
+  if (options.project !== undefined) payload._links.project = { href: `/api/v3/projects/${projectId}` };
 
-  if (options.subject) payload.subject = options.subject;
-  if (options.description) payload.description = { format: 'markdown', raw: options.description };
-  if (options.percentDone !== undefined) payload.percentageDone = parseInt(options.percentDone, 10);
+  if (options.subject !== undefined) payload.subject = options.subject;
+  if (options.description !== undefined) payload.description = { format: 'markdown', raw: options.description };
+  if (options.percentDone !== undefined) payload.percentageDone = options.percentDone;
 
   if (options.status) {
-    const statuses = await opFetch('/statuses');
-    const match = statuses._embedded.elements.find(
-      s => s.name.toLowerCase() === options.status.toLowerCase()
-    );
-    if (match) payload._links.status = { href: `/api/v3/statuses/${match.id}` };
+    const id = await resolveNamedId('/statuses', options.status, 'status');
+    payload._links.status = { href: `/api/v3/statuses/${id}` };
   }
 
   if (options.priority) {
-    const priorities = await opFetch('/priorities');
-    const match = priorities._embedded.elements.find(
-      p => p.name.toLowerCase() === options.priority.toLowerCase()
-    );
-    if (match) payload._links.priority = { href: `/api/v3/priorities/${match.id}` };
+    const id = await resolveNamedId('/priorities', options.priority, 'priority');
+    payload._links.priority = { href: `/api/v3/priorities/${id}` };
   }
 
   if (options.type) {
-    const projectId = halId(current, 'project');
-    if (projectId) {
-      const types = await opFetch(`/projects/${projectId}/types`);
-      const match = types._embedded.elements.find(
-        t => t.name.toLowerCase() === options.type.toLowerCase()
-      );
-      if (match) payload._links.type = { href: `/api/v3/types/${match.id}` };
-    }
+    if (!projectId && !/^\d+$/.test(options.type)) throw new Error('Cannot resolve type name without the work package project');
+    const id = await resolveNamedId(`/projects/${projectId}/types`, options.type, 'type');
+    payload._links.type = { href: `/api/v3/types/${id}` };
   }
 
   if (Object.keys(payload._links).length === 0) delete payload._links;
+  requireChanges(payload);
 
   await opFetch(`/work_packages/${options.id}`, {
     method: 'PATCH',
@@ -2643,11 +2657,11 @@ program
 // Work Packages
 program.command('wp-list').description('List work packages')
   .option('-p, --project <id>', 'Project identifier')
-  .option('-s, --status <name>', 'Filter by exact status name (e.g. "In progress")')
+  .option('-s, --status <name>', 'Filter by exact status name or ID')
   .option('--open', 'Show only open work packages (any non-closed status)')
   .option('--closed', 'Show only closed work packages')
   .option('-a, --assignee <user>', 'Filter by assignee ("me" or user ID)')
-  .option('-t, --type <name>', 'Filter by type name')
+  .option('-t, --type <name>', 'Filter by type name or ID')
   .option('--json', 'Output all matching work packages as JSON (paginated; incl. start/due dates + description)')
   .action(wrap(cmdWpList));
 
@@ -2655,17 +2669,18 @@ program.command('wp-create').description('Create a work package')
   .option('-p, --project <id>', 'Project identifier')
   .requiredOption('-s, --subject <text>', 'Work package subject')
   .option('-d, --description <text>', 'Description (markdown)')
-  .option('-t, --type <name>', 'Type (Task, Bug, Feature...)')
-  .option('--priority <name>', 'Priority name')
+  .option('-t, --type <name>', 'Type name or ID (Task, Bug, Feature...)')
+  .option('--priority <name>', 'Priority name or ID')
+  .option('--status <name>', 'Initial status name or ID')
   .option('--assignee <id>', 'Assignee user ID', value => numericId(value, 'Assignee'))
-  .option('--start-date <date>', 'Start date (YYYY-MM-DD)', dateValue)
-  .option('--due-date <date>', 'Due date (YYYY-MM-DD)', dateValue)
-  .option('--date <date>', 'Milestone date (YYYY-MM-DD)', dateValue)
-  .option('--estimate <duration>', 'Estimated time (e.g. PT2H30M)', durationValue)
+  .option('--start-date <date>', 'Start date (YYYY-MM-DD, or none)', nullableDate)
+  .option('--due-date <date>', 'Due date (YYYY-MM-DD, or none)', nullableDate)
+  .option('--date <date>', 'Milestone date (YYYY-MM-DD, or none)', nullableDate)
+  .option('--estimate <duration>', 'Estimated time (e.g. PT2H30M, or none)', nullableDuration)
   .action(wrap(cmdWpCreate));
 
 program.command('wp-read').description('Read work package details')
-  .requiredOption('--id <id>', 'Work package ID')
+  .requiredOption('--id <id>', 'Work package ID', numericId)
   .option('--json', 'Output the work package as JSON (incl. start/due dates + description)')
   .action(wrap(cmdWpRead));
 
@@ -2673,19 +2688,29 @@ program.command('wp-update').description('Update a work package')
   .requiredOption('--id <id>', 'Work package ID', numericId)
   .option('-s, --subject <text>', 'New subject')
   .option('-d, --description <text>', 'New description')
-  .option('--status <name>', 'New status name')
-  .option('--priority <name>', 'New priority name')
-  .option('-t, --type <name>', 'New type name')
-  .option('--percent-done <n>', 'Percentage done (0-100)')
+  .option('--status <name>', 'New status name or ID')
+  .option('--priority <name>', 'New priority name or ID')
+  .option('-t, --type <name>', 'New type name or ID')
+  .option('--percent-done <n>', 'Whole percentage done (0-100)', percentageValue)
+  .option('-p, --project <id>', 'Move to project ID or identifier', projectRef)
   .option('--assignee <id>', 'Assignee user ID, or none to clear', value => value === 'none' ? value : numericId(value, 'Assignee'))
-  .option('--start-date <date>', 'Start date (YYYY-MM-DD)', dateValue)
-  .option('--due-date <date>', 'Due date (YYYY-MM-DD)', dateValue)
-  .option('--date <date>', 'Milestone date (YYYY-MM-DD)', dateValue)
-  .option('--estimate <duration>', 'Estimated time (e.g. PT2H30M)', durationValue)
+  .option('--start-date <date>', 'Start date (YYYY-MM-DD, or none)', nullableDate)
+  .option('--due-date <date>', 'Due date (YYYY-MM-DD, or none)', nullableDate)
+  .option('--date <date>', 'Milestone date (YYYY-MM-DD, or none)', nullableDate)
+  .option('--estimate <duration>', 'Estimated time (e.g. PT2H30M, or none)', nullableDuration)
   .action(wrap(cmdWpUpdate));
 
+for (const command of program.commands.filter(command => ['wp-create', 'wp-update'].includes(command.name()))) {
+  command.option('--responsible <id>', 'Responsible user ID, or none to clear', optionalId)
+    .option('--parent <id>', 'Parent work package ID, or none to remove', optionalId)
+    .option('--category <id>', 'Category ID, or none to clear', optionalId)
+    .option('--target-version <id>', 'Target version ID, or none to clear', optionalId)
+    .option('--remaining <duration>', 'Remaining work (ISO duration, or none to clear)', nullableDuration)
+    .option('--schedule-manually <bool>', 'Manual scheduling (true/false)', booleanValue);
+}
+
 program.command('wp-delete').description('Delete a work package (requires --confirm)')
-  .requiredOption('--id <id>', 'Work package ID')
+  .requiredOption('--id <id>', 'Work package ID', numericId)
   .option('--confirm', 'Confirm deletion (required)')
   .action(wrap(cmdWpDelete));
 
