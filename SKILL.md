@@ -65,6 +65,13 @@ node {baseDir}/scripts/openproject.mjs wp-delete --id 42 --confirm
 
 Create/update accept `--responsible`, `--parent`, `--category`, `--target-version`, `--remaining` and `--schedule-manually`. Use `none` to clear nullable fields and relationships; `--target-version` writes the current `targetVersions` link array. Remaining-work/progress writes depend on instance settings. Type, priority and status accept names or numeric IDs, and unknown names are rejected. JSON output includes relationship IDs, target version IDs and effort estimates.
 
+```bash
+# Discover valid assignments, project moves and relations before changing a task
+node {baseDir}/scripts/openproject.mjs wp-assignees --id 42
+node {baseDir}/scripts/openproject.mjs wp-projects --id 42
+node {baseDir}/scripts/openproject.mjs wp-relation-candidates --id 42 --query "Login" --type blocks
+```
+
 ### Projects
 
 ```bash
@@ -84,6 +91,8 @@ node {baseDir}/scripts/openproject.mjs project-update --id my-project --active f
 
 # Delete a project
 node {baseDir}/scripts/openproject.mjs project-delete --id my-project --confirm
+node {baseDir}/scripts/openproject.mjs project-assignees --project my-project
+node {baseDir}/scripts/openproject.mjs project-parent-candidates --project my-project --query "Planning"
 ```
 
 ### Comments (Activities)
@@ -106,6 +115,7 @@ node {baseDir}/scripts/openproject.mjs comment-update --id 21 --body "Public upd
 ```bash
 # List attachments on a work package
 node {baseDir}/scripts/openproject.mjs attachment-list --wp-id 42
+node {baseDir}/scripts/openproject.mjs attachment-read --id 10
 
 # Upload an attachment
 node {baseDir}/scripts/openproject.mjs attachment-add --wp-id 42 --file ./screenshot.png
@@ -428,6 +438,8 @@ node {baseDir}/scripts/openproject.mjs help-text-read --id 1
 ### Custom Fields & Options
 
 ```bash
+node {baseDir}/scripts/openproject.mjs custom-field-read --id 10
+
 # List items for a hierarchical custom field
 node {baseDir}/scripts/openproject.mjs custom-field-items --id 10
 
@@ -547,6 +559,16 @@ node {baseDir}/scripts/openproject.mjs type-list
 
 # List priorities
 node {baseDir}/scripts/openproject.mjs priority-list
+node {baseDir}/scripts/openproject.mjs status-read --id 1
+node {baseDir}/scripts/openproject.mjs type-list --project my-project --json
+node {baseDir}/scripts/openproject.mjs type-read --id 1
+node {baseDir}/scripts/openproject.mjs priority-read --id 1
+node {baseDir}/scripts/openproject.mjs category-read --id 3
+
+# Look up IDs for membership management
+node {baseDir}/scripts/openproject.mjs role-list --unit project --grantable true
+node {baseDir}/scripts/openproject.mjs role-read --id 3
+node {baseDir}/scripts/openproject.mjs principal-list --type Group --name Engineering --project my-project
 
 # List project members
 node {baseDir}/scripts/openproject.mjs member-list --project my-project

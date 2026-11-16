@@ -100,13 +100,15 @@ node scripts/openproject.mjs wp-create --project my-project --subject "My first 
 See [SKILL.md](./SKILL.md) for full command reference.
 See [API-COVERAGE.md](./docs/API-COVERAGE.md) for implemented operations and remaining gaps, and [CHANGELOG.md](./CHANGELOG.md) for unreleased changes.
 
-### 147 commands across 37 command groups:
+### 161 commands across 39 command groups:
 
 | Entity | Commands |
 |--------|----------|
-| Work Packages | `wp-list`, `wp-create`, `wp-read`, `wp-update`, `wp-delete` |
-| Projects | `project-list`, `project-read`, `project-create`, `project-update`, `project-delete` |
+| Work Packages | `wp-list`, `wp-create`, `wp-read`, `wp-update`, `wp-delete`, `wp-assignees`, `wp-projects`, `wp-relation-candidates` |
+| Projects | `project-list`, `project-read`, `project-create`, `project-update`, `project-delete`, `project-assignees`, `project-parent-candidates` |
 | Users | `user-list`, `user-read`, `user-me`, `user-create`, `user-update`, `user-delete`, `user-lock`, `user-unlock` |
+| Roles | `role-list`, `role-read` |
+| Principals | `principal-list` |
 | Documents | `document-list`, `document-read`, `document-update` |
 | Revisions | `revision-read`, `revision-list-by-wp` |
 | Capabilities | `capability-list`, `capability-global`, `action-list`, `action-read` |
@@ -128,7 +130,7 @@ See [API-COVERAGE.md](./docs/API-COVERAGE.md) for implemented operations and rem
 | Configuration | `config-read`, `project-config-read` |
 | OAuth | `oauth-app-read`, `oauth-credentials-read` |
 | Help Texts | `help-text-list`, `help-text-read` |
-| Custom Fields | `custom-field-items`, `custom-field-item-read`, `custom-field-item-branch`, `custom-option-read` |
+| Custom Fields | `custom-field-read`, `custom-field-items`, `custom-field-item-read`, `custom-field-item-branch`, `custom-option-read` |
 | Custom Actions | `custom-action-read`, `custom-action-execute` |
 | Groups | `group-list`, `group-read`, `group-create`, `group-update`, `group-delete` |
 | News | `news-list`, `news-read`, `news-create`, `news-update`, `news-delete` |
@@ -136,11 +138,11 @@ See [API-COVERAGE.md](./docs/API-COVERAGE.md) for implemented operations and rem
 | Relations | `relation-list`, `relation-read`, `relation-create`, `relation-update`, `relation-delete` |
 | Notifications | `notification-list`, `notification-read`, `notification-mark-read`, `notification-mark-unread` |
 | Comments | `comment-list`, `comment-add`, `comment-read`, `comment-update` |
-| Attachments | `attachment-list`, `attachment-add`, `attachment-delete` |
+| Attachments | `attachment-list`, `attachment-read`, `attachment-add`, `attachment-delete` |
 | Time Entries | `time-list`, `time-create`, `time-update`, `time-delete` |
 | Wiki Pages | `wiki-read`, `wiki-attachment-list`, `wiki-attachment-add` |
-| Statuses/Transitions | `status-list` + `wp-update --status` |
-| Reference Data | `type-list`, `priority-list`, `member-list`, `member-read`, `member-create`, `member-update`, `member-delete`, `version-list`, `version-read`, `version-create`, `version-update`, `version-delete`, `category-list` |
+| Statuses/Transitions | `status-list`, `status-read` + `wp-update --status` |
+| Reference Data | `type-list`, `type-read`, `priority-list`, `priority-read`, `member-list`, `member-read`, `member-create`, `member-update`, `member-delete`, `version-list`, `version-read`, `version-create`, `version-update`, `version-delete`, `category-list`, `category-read` |
 
 ## Security
 

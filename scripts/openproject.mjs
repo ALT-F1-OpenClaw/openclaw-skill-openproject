@@ -280,6 +280,47 @@ async function cmdResourceRead(options, resource) {
   console.log(JSON.stringify(result, null, 2));
 }
 
+async function cmdCollectionRead(path, query = {}) {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (value !== undefined) params.set(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
+  }
+  const suffix = params.toString();
+  const result = await opFetch(`${path}${suffix ? `?${suffix}` : ''}`);
+  console.log(JSON.stringify(result, null, 2));
+}
+
+async function cmdWpDiscovery(options, resource) {
+  const query = resource === 'available_relation_candidates'
+    ? { pageSize: CFG.maxResults, query: options.query, type: options.type } : {};
+  await cmdCollectionRead(`/work_packages/${options.id}/${resource}`, query);
+}
+
+async function cmdProjectAssignees(options) {
+  const id = await resolveProject(options.project);
+  await cmdCollectionRead(`/workspaces/${id}/available_assignees`);
+}
+
+async function cmdProjectParentCandidates(options) {
+  const filters = options.query ? [{ name_and_identifier: { operator: '~', values: [options.query] } }] : undefined;
+  await cmdCollectionRead('/projects/available_parent_projects', { of: options.project, filters });
+}
+
+async function cmdRoleList(options) {
+  const filters = [];
+  if (options.unit) filters.push({ unit: { operator: '=', values: [options.unit] } });
+  if (options.grantable !== undefined) filters.push({ grantable: { operator: '=', values: [options.grantable ? 't' : 'f'] } });
+  await cmdCollectionRead('/roles', { filters: filters.length ? filters : undefined });
+}
+
+async function cmdPrincipalList(options) {
+  const filters = [];
+  if (options.type) filters.push({ type: { operator: '=', values: [options.type] } });
+  if (options.name) filters.push({ any_name_attribute: { operator: '~', values: [options.name] } });
+  if (options.project) filters.push({ member: { operator: '=', values: [await resolveProject(options.project)] } });
+  await cmdCollectionRead('/principals', { pageSize: CFG.maxResults, offset: options.page || 1, filters: filters.length ? filters : undefined });
+}
+
 async function cmdResourceDelete(options, resource) {
   requireConfirm(options, `Deleting ${resource}`);
   await opFetch(`/${resource}/${options.id}`, { method: 'DELETE' });
@@ -856,8 +897,10 @@ async function cmdStatusList() {
   }
 }
 
-async function cmdTypeList() {
-  const resp = await opFetch('/types');
+async function cmdTypeList(options) {
+  const path = options.project ? `/workspaces/${await resolveProject(options.project)}/types` : '/types';
+  const resp = await opFetch(path);
+  if (options.json) { console.log(JSON.stringify(resp, null, 2)); return; }
   console.log('Available types:\n');
   for (const t of resp._embedded.elements) {
     console.log(`  🏷️  ID: ${String(t.id).padEnd(4)}  ${t.name}`);
@@ -2714,6 +2757,17 @@ program.command('wp-delete').description('Delete a work package (requires --conf
   .option('--confirm', 'Confirm deletion (required)')
   .action(wrap(cmdWpDelete));
 
+for (const [command, resource] of [['wp-assignees', 'available_assignees'], ['wp-projects', 'available_projects']]) {
+  program.command(command).description(`List work package ${resource.replace('available_', '')} as JSON`)
+    .requiredOption('--id <id>', 'Work package ID', numericId)
+    .action(wrap(options => cmdWpDiscovery(options, resource)));
+}
+program.command('wp-relation-candidates').description('Find valid work packages to relate as JSON')
+  .requiredOption('--id <id>', 'Source work package ID', numericId)
+  .option('--query <text>', 'Search by ID or subject')
+  .option('--type <type>', 'Relation type (default: relates)', choice(...RELATION_TYPES), 'relates')
+  .action(wrap(options => cmdWpDiscovery(options, 'available_relation_candidates')));
+
 // Projects
 program.command('project-list').description('List projects')
   .action(wrap(cmdProjectList));
@@ -2744,6 +2798,15 @@ program.command('project-delete').description('Delete a project')
   .requiredOption('--id <id>', 'Project ID or identifier', projectRef)
   .option('--confirm', 'Confirm deletion')
   .action(wrap(cmdProjectDelete));
+
+program.command('project-assignees').description('List available project assignees as JSON')
+  .option('--project <id>', 'Project ID or identifier (defaults to OP_DEFAULT_PROJECT)', projectRef)
+  .action(wrap(cmdProjectAssignees));
+
+program.command('project-parent-candidates').description('List eligible parent projects as JSON')
+  .option('--project <id>', 'Project ID or identifier; omit for a new project', projectRef)
+  .option('--query <text>', 'Filter by project name or identifier')
+  .action(wrap(cmdProjectParentCandidates));
 
 // Comments
 program.command('comment-list').description('List comments on a work package')
@@ -2808,8 +2871,32 @@ program.command('time-delete').description('Delete a time entry (requires --conf
 
 // Reference Data
 program.command('status-list').description('List all statuses').action(wrap(cmdStatusList));
-program.command('type-list').description('List work package types').action(wrap(cmdTypeList));
+program.command('type-list').description('List work package types')
+  .option('--project <id>', 'Types enabled in this project', projectRef)
+  .option('--json', 'Return the full collection as JSON')
+  .action(wrap(cmdTypeList));
 program.command('priority-list').description('List priorities').action(wrap(cmdPriorityList));
+
+for (const [command, resource] of [
+  ['status-read', 'statuses'], ['type-read', 'types'], ['priority-read', 'priorities'], ['category-read', 'categories'],
+  ['role-read', 'roles'], ['custom-field-read', 'custom_fields'], ['attachment-read', 'attachments'],
+]) {
+  program.command(command).description(`Read ${resource.replaceAll('_', ' ')} metadata as JSON`)
+    .requiredOption('--id <id>', 'Resource ID', numericId)
+    .action(wrap(options => cmdResourceRead(options, resource)));
+}
+
+program.command('role-list').description('List roles available for memberships as JSON')
+  .option('--unit <unit>', 'project or system', choice('project', 'system'))
+  .option('--grantable <bool>', 'Filter roles selectable for membership (true/false)', booleanValue)
+  .action(wrap(cmdRoleList));
+
+program.command('principal-list').description('Search users, groups and placeholders as JSON')
+  .option('--type <type>', 'User, Group or PlaceholderUser', choice('User', 'Group', 'PlaceholderUser'))
+  .option('--name <text>', 'Search names, email or login')
+  .option('--project <id>', 'Filter by project membership', projectRef)
+  .option('--page <number>', 'Page number (default: 1)', numericId)
+  .action(wrap(cmdPrincipalList));
 
 program.command('member-list').description('List project members')
   .option('-p, --project <id>', 'Project identifier')
