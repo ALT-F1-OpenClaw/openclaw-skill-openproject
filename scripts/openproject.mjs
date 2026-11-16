@@ -376,7 +376,30 @@ async function resolveNamedId(path, value, label) {
   return String(match.id);
 }
 
+// --status open|closed predates the --open/--closed flags, so keep accepting it.
+// The alias only applies when the instance has no status by that exact name, so a
+// real "Open"/"Closed" status is still matched by ID and never shadowed.
+async function resolveStatusFilter(value) {
+  const alias = value.trim().toLowerCase();
+  if (alias === 'open' || alias === 'closed') {
+    const statuses = (await opFetch('/statuses'))._embedded?.elements || [];
+    const match = statuses.find(item => item.name.toLowerCase() === alias);
+    if (match) return { operator: '=', values: [String(match.id)] };
+    return { operator: alias === 'closed' ? 'c' : 'o', values: [] };
+  }
+  const id = await resolveNamedId('/statuses', value, 'status');
+  return { operator: '=', values: [id] };
+}
+
 async function cmdWpList(options) {
+  if (options.open && options.closed) {
+    throw new Error('--open and --closed are mutually exclusive. Pass only one.');
+  }
+  if (options.status && (options.open || options.closed)) {
+    const flag = options.open ? '--open' : '--closed';
+    throw new Error(`--status cannot be combined with ${flag}. Use ${flag} for every open/closed status, or --status <name> for one specific status.`);
+  }
+
   const project = options.project || CFG.defaultProject;
   const filters = [];
 
@@ -389,8 +412,7 @@ async function cmdWpList(options) {
     // OpenProject native meta-filter: 'o' = any open status, 'c' = any closed status
     filters.push({ status: { operator: options.closed ? 'c' : 'o', values: [] } });
   } else if (options.status) {
-    const id = await resolveNamedId('/statuses', options.status, 'status');
-    filters.push({ status: { operator: '=', values: [id] } });
+    filters.push({ status: await resolveStatusFilter(options.status) });
   }
   if (options.assignee === 'me') {
     filters.push({ assignee: { operator: '=', values: ['me'] } });
