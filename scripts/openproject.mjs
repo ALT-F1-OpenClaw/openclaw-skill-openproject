@@ -12,14 +12,19 @@
 // File I/O is used ONLY for reading user-specified attachments that the user
 // explicitly passes via --file flag. No arbitrary file access.
 import { readFileSync, statSync } from 'node:fs';
-import { basename, resolve, posix } from 'node:path';
+import { basename, resolve, posix, dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Buffer } from 'node:buffer';
 import { config } from 'dotenv';
 import { Command } from 'commander';
 
 // ── Config ──────────────────────────────────────────────────────────────────
 
-config(); // load .env
+config(); // load .env from the current working directory (takes precedence)
+// Fallback: also load the .env that ships next to this script, so the CLI works
+// when invoked from any directory. dotenv never overrides already-set vars,
+// so a cwd .env or real environment variables still win.
+config({ path: join(dirname(fileURLToPath(import.meta.url)), '..', '.env') });
 
 let _cfg;
 function getCfg() {
@@ -143,6 +148,28 @@ function halId(obj, rel) {
   return match ? match[1] : null;
 }
 
+// Normalize a work package into a flat JSON object with the fields the API
+// already returns but the human-readable output omits (start/due dates, description).
+function normalizeWp(wp) {
+  return {
+    id: wp.id,
+    subject: wp.subject,
+    type: halLink(wp, 'type'),
+    status: halLink(wp, 'status'),
+    priority: halLink(wp, 'priority'),
+    assignee: wp?._links?.assignee?.title || null,
+    project: halLink(wp, 'project'),
+    projectId: halId(wp, 'project'),
+    startDate: wp.startDate || null,
+    dueDate: wp.dueDate || null,
+    percentageDone: wp.percentageDone ?? null,
+    createdAt: wp.createdAt || null,
+    updatedAt: wp.updatedAt || null,
+    description: wp.description?.raw || '',
+    url: `${CFG.host}/work_packages/${wp.id}`,
+  };
+}
+
 // ── Work Package commands ───────────────────────────────────────────────────
 
 async function cmdWpList(options) {
@@ -171,6 +198,24 @@ async function cmdWpList(options) {
   }
 
   const filterParam = filters.length ? `&filters=${encodeURIComponent(JSON.stringify(filters))}` : '';
+
+  // --json: paginate through ALL matching work packages and emit normalized
+  // JSON (incl. start/due dates + description) for programmatic consumers.
+  if (options.json) {
+    const all = [];
+    let page = 1;
+    while (true) {
+      const resp = await opFetch(`/work_packages?offset=${page}&pageSize=100${filterParam}&sortBy=[["updatedAt","desc"]]`);
+      const els = resp._embedded?.elements || [];
+      for (const wp of els) all.push(normalizeWp(wp));
+      const total = resp.total || 0;
+      if (all.length >= total || els.length === 0) break;
+      page++;
+    }
+    console.log(JSON.stringify({ total: all.length, tasks: all }, null, 2));
+    return;
+  }
+
   const resp = await opFetch(`/work_packages?pageSize=${CFG.maxResults}${filterParam}&sortBy=[["updatedAt","desc"]]`);
 
   if (!resp._embedded.elements.length) {
@@ -252,6 +297,11 @@ async function cmdWpRead(options) {
 
   const wp = await opFetch(`/work_packages/${options.id}`);
 
+  if (options.json) {
+    console.log(JSON.stringify(normalizeWp(wp), null, 2));
+    return;
+  }
+
   console.log(`📋 #${wp.id}: ${wp.subject}`);
   console.log(`   Type:        ${halLink(wp, 'type')}`);
   console.log(`   Status:      ${halLink(wp, 'status')}`);
@@ -261,6 +311,8 @@ async function cmdWpRead(options) {
   console.log(`   Project:     ${halLink(wp, 'project')}`);
   console.log(`   Version:     ${halLink(wp, 'version')}`);
   console.log(`   Category:    ${halLink(wp, 'category')}`);
+  console.log(`   Start:       ${wp.startDate || '?'}`);
+  console.log(`   Due:         ${wp.dueDate || '?'}`);
   console.log(`   Created:     ${wp.createdAt?.substring(0, 10) || '?'}`);
   console.log(`   Updated:     ${wp.updatedAt?.substring(0, 10) || '?'}`);
   console.log(`   % Done:      ${wp.percentageDone ?? '?'}%`);
@@ -2305,6 +2357,7 @@ program.command('wp-list').description('List work packages')
   .option('-s, --status <name>', 'Filter by status name')
   .option('-a, --assignee <user>', 'Filter by assignee ("me" or user ID)')
   .option('-t, --type <name>', 'Filter by type name')
+  .option('--json', 'Output all matching work packages as JSON (paginated; incl. start/due dates + description)')
   .action(wrap(cmdWpList));
 
 program.command('wp-create').description('Create a work package')
@@ -2317,6 +2370,7 @@ program.command('wp-create').description('Create a work package')
 
 program.command('wp-read').description('Read work package details')
   .requiredOption('--id <id>', 'Work package ID')
+  .option('--json', 'Output the work package as JSON (incl. start/due dates + description)')
   .action(wrap(cmdWpRead));
 
 program.command('wp-update').description('Update a work package')

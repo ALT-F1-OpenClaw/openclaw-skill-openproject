@@ -33,11 +33,17 @@ OP_DEFAULT_PROJECT=my-project
 # List work packages (with optional filters)
 node {baseDir}/scripts/openproject.mjs wp-list --project my-project --status open --assignee me
 
+# List work packages as JSON — paginated, includes start/due dates + description
+node {baseDir}/scripts/openproject.mjs wp-list --status open --json
+
 # Create a work package
 node {baseDir}/scripts/openproject.mjs wp-create --project my-project --type Task --subject "Fix login bug" --description "Users can't log in"
 
 # Read work package details
 node {baseDir}/scripts/openproject.mjs wp-read --id 42
+
+# Read work package details as JSON (incl. start/due dates + description)
+node {baseDir}/scripts/openproject.mjs wp-read --id 42 --json
 
 # Update a work package
 node {baseDir}/scripts/openproject.mjs wp-update --id 42 --subject "New title" --priority High
