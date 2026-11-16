@@ -65,6 +65,8 @@ node {baseDir}/scripts/openproject.mjs wp-delete --id 42 --confirm
 
 Create/update accept `--responsible`, `--parent`, `--category`, `--target-version`, `--remaining` and `--schedule-manually`. Use `none` to clear nullable fields and relationships; `--target-version` writes the current `targetVersions` link array. Remaining-work/progress writes depend on instance settings. Type, priority and status accept names or numeric IDs, and unknown names are rejected. JSON output includes relationship IDs, target version IDs and effort estimates.
 
+Automatic scheduling requires predecessors or children. Remaining work cannot be written in status-based progress mode.
+
 ```bash
 # Discover valid assignments, project moves and relations before changing a task
 node {baseDir}/scripts/openproject.mjs wp-assignees --id 42

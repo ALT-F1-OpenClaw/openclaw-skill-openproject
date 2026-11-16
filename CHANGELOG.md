@@ -9,8 +9,11 @@
 - Add meeting CRUD and agenda item, outcome and section management, including optimistic locking for meeting/agenda updates.
 - Add user invitations, active creation, updates, deletion, lock/unlock and self password changes via environment variables.
 - Add direct activity reads and comment editing.
+- Extend daily work package planning with parent/responsible/category/target-version links, project moves, nullable dates/effort and validated progress. Resolve type names in filters and reject unknown mutation names.
+- Add assignment/move/relation discovery, parent candidates, role/principal lookup and individual reference/attachment metadata reads.
+- Add global/project-shared sprint browsing and time-entry/activity/project discovery.
 - Fix global capability listing, membership listing routes and HTML rendering responses.
-- Add 74 mocked regression checks and refresh the API coverage/status documentation.
+- Add 99 mocked regression checks and refresh the API coverage/status documentation.
 - Align package lockfile metadata and README counts; replace former example host references with ALT-F1 examples.
 
 The package and CLI remain at version 2.0.0 until a release is prepared. The API remains partially implemented; see [API coverage](docs/API-COVERAGE.md).

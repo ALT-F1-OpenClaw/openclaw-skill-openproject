@@ -2773,7 +2773,7 @@ for (const [command, resource] of [['wp-assignees', 'available_assignees'], ['wp
 program.command('wp-relation-candidates').description('Find valid work packages to relate as JSON')
   .requiredOption('--id <id>', 'Source work package ID', numericId)
   .option('--query <text>', 'Search by ID or subject')
-  .option('--type <type>', 'Relation type (default: relates)', choice(...RELATION_TYPES), 'relates')
+  .option('--type <type>', 'Relation type', choice(...RELATION_TYPES), 'relates')
   .action(wrap(options => cmdWpDiscovery(options, 'available_relation_candidates')));
 
 // Projects
@@ -2891,6 +2891,7 @@ program.command('priority-list').description('List priorities').action(wrap(cmdP
 for (const [command, resource] of [
   ['status-read', 'statuses'], ['type-read', 'types'], ['priority-read', 'priorities'], ['category-read', 'categories'],
   ['role-read', 'roles'], ['custom-field-read', 'custom_fields'], ['attachment-read', 'attachments'],
+  // The 17.9.7 spec says "activity", but the released server uses "activities".
   ['time-read', 'time_entries'], ['time-activity-read', 'time_entries/activities'],
 ]) {
   program.command(command).description(`Read ${resource.replaceAll('_', ' ')} metadata as JSON`)

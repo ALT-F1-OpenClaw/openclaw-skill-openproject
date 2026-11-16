@@ -2,7 +2,7 @@
 
 Verified review of the skill against both released and development OpenProject API v3 specifications. The CLI covers common workflows, but has integration bugs and substantial feature gaps. Differences below include existing implementation defects and unimplemented features; they should not all be interpreted as recent upstream changes.
 
-> Sections 1–6 preserve the audit of revision `c4bea85` before the fixes. Sections 7–8 record subsequent fixes and feature implementation; section 8 has the latest verification and coverage totals.
+> Sections 1–6 preserve the audit of revision `c4bea85` before the fixes. Sections 7–9 record subsequent work; section 9 has the latest verification and coverage totals.
 
 - **Skill version:** 2.0.0 (`package.json`, CLI `--version`)
 - **Project revision reviewed:** [`c4bea8550667f66778d1805e7156d03c9116b8e9`](https://github.com/ALT-F1-OpenClaw/openclaw-skill-openproject/commit/c4bea8550667f66778d1805e7156d03c9116b8e9)
@@ -211,3 +211,19 @@ The implemented project/work package functionality addresses PR #20's local feat
 README, SKILL.md, API-COVERAGE.md and an Unreleased CHANGELOG describe the new commands. The package/CLI version remains 2.0.0; no release or push has been performed.
 
 Full API parity is still outstanding. Remaining areas include recurring meetings, user availability, sprint/workspace commands, project copy/favorites, form/schema discovery, direct uploads, and the deliberate/development-only exclusions documented in API-COVERAGE.md. CI, the changelog and the coverage rewrite are now completed, superseding the outstanding-work note in section 7.
+
+## 9. Daily-workflow APIs — 2026-11-16
+
+Prioritized practical work package planning and lookup workflows. This prioritization is based on common project-management tasks, not instance usage telemetry.
+
+| Commit | Completed work |
+|---|---|
+| `dd73727` | Work package parents, responsible users, categories, current target-version links, project moves, remaining work, manual scheduling and explicit date/effort clearing. Resolve type filters by name; reject unknown type/priority/status mutations, invalid percentages, empty updates and missing lock metadata. JSON includes relationship IDs and work estimates. |
+| `48ff8fb` | Valid work package assignees/move destinations/relation candidates, project assignees/parent candidates, role/principal searches, individual reference/custom-field/attachment reads, and project-enabled type listing through workspace routes. |
+| `21d426b` | Global/project-shared sprint listings, defining-project filters and sprint reads; individual time entry/activity reads and available time-tracking projects. |
+
+**Current state:** 166 commands across 40 README groups and **99 passing mocked regression checks**. The current inventory matches **116 paths / 167 operations** in the audited development specification and **117 paths / 168 operations** in the audited released specification. Denominators remain 258/345 and 229/315 respectively. Documentation is checked against registered command names and pinned specification counts.
+
+The released time-activity specification uses singular `activity`, while the released server and request spec use plural `activities`. The CLI follows the server route. Both anonymous public lookups returned 404; those responses do not establish successful access or routing. Source/request-spec verification resolves the spelling, and literal released-spec coverage excludes that operation. See API-COVERAGE.md for source links.
+
+Remaining work is still substantial: recurring meetings, user availability, broader workspace operations, project copy/favorites, forms/schemas, direct uploads, and deliberately excluded/development-only resource groups. No push, release or authenticated integration test was performed. The unrelated untracked MCP server plan is outside this batch.
