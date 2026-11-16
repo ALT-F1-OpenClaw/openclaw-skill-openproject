@@ -491,6 +491,13 @@ node {baseDir}/scripts/openproject.mjs priority-list
 # List project members
 node {baseDir}/scripts/openproject.mjs member-list --project my-project
 
+# Manage memberships; --roles replaces the complete role set
+node {baseDir}/scripts/openproject.mjs member-read --id 7
+node {baseDir}/scripts/openproject.mjs member-create --project my-project --principal 5 --roles 2,3
+node {baseDir}/scripts/openproject.mjs member-update --id 7 --roles 3
+node {baseDir}/scripts/openproject.mjs member-delete --id 7 --confirm
+# Use --principal-type group or placeholder for non-user principals
+
 # List versions/milestones
 node {baseDir}/scripts/openproject.mjs version-list --project my-project
 

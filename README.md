@@ -98,7 +98,7 @@ node scripts/openproject.mjs wp-create --project my-project --subject "My first 
 
 See [SKILL.md](./SKILL.md) for full command reference.
 
-### 113 commands across 34 command groups:
+### 117 commands across 34 command groups:
 
 | Entity | Commands |
 |--------|----------|
@@ -135,7 +135,7 @@ See [SKILL.md](./SKILL.md) for full command reference.
 | Time Entries | `time-list`, `time-create`, `time-update`, `time-delete` |
 | Wiki Pages | `wiki-read`, `wiki-attachment-list`, `wiki-attachment-add` |
 | Statuses/Transitions | `status-list` + `wp-update --status` |
-| Reference Data | `type-list`, `priority-list`, `member-list`, `version-list`, `category-list` |
+| Reference Data | `type-list`, `priority-list`, `member-list`, `member-read`, `member-create`, `member-update`, `member-delete`, `version-list`, `category-list` |
 
 ## Security
 

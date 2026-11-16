@@ -189,6 +189,17 @@ function booleanValue(value) {
   return value === 'true';
 }
 
+function choice(...values) {
+  return value => {
+    if (!values.includes(value)) throw new InvalidArgumentError(`Expected one of: ${values.join(', ')}`);
+    return value;
+  };
+}
+
+function idList(value) {
+  return value.split(',').map(id => numericId(id.trim()));
+}
+
 function dateValue(value) {
   const date = new Date(`${value}T00:00:00Z`);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value) {
@@ -217,6 +228,17 @@ async function resolveProject(value) {
   const ref = projectRef(value || CFG.defaultProject || '');
   const project = await opFetch(`/projects/${ref}`);
   return numericId(project.id, 'Resolved project');
+}
+
+async function cmdResourceRead(options, resource) {
+  const result = await opFetch(`/${resource}/${options.id}`);
+  console.log(JSON.stringify(result, null, 2));
+}
+
+async function cmdResourceDelete(options, resource) {
+  requireConfirm(options, `Deleting ${resource}`);
+  await opFetch(`/${resource}/${options.id}`, { method: 'DELETE' });
+  console.log(`✅ Deleted ${resource}: ${options.id}`);
 }
 
 function wpSchedule(options) {
@@ -814,10 +836,29 @@ async function cmdMemberList(options) {
 
   for (const m of resp._embedded.elements) {
     const user = halLink(m, 'principal');
-    const roles = m._embedded?.roles?.map(r => r.name).join(', ') || halLink(m, 'roles');
+    const roles = m._embedded?.roles?.map(r => r.name).filter(Boolean).join(', ')
+      || m._links?.roles?.map(r => r.title || r.href?.split('/').pop()).join(', ') || '?';
     console.log(`  👤  ${user.padEnd(25)}  ${roles}`);
   }
   console.log(`\n${resp._embedded.elements.length} member(s)`);
+}
+
+async function cmdMemberWrite(options, create = false) {
+  const links = {};
+  if (options.project !== undefined || create) links.project = { href: `/api/v3/projects/${await resolveProject(options.project)}` };
+  if (options.principal !== undefined) {
+    const namespace = { user: 'users', group: 'groups', placeholder: 'placeholder_users' }[options.principalType || 'user'];
+    links.principal = { href: `/api/v3/${namespace}/${options.principal}` };
+  } else if (options.principalType !== undefined) {
+    throw new Error('--principal-type requires --principal');
+  }
+  if (options.roles !== undefined) links.roles = options.roles.map(id => ({ href: `/api/v3/roles/${id}` }));
+  const payload = Object.keys(links).length ? { _links: links } : {};
+  requireChanges(payload);
+  const result = await opFetch(create ? '/memberships' : `/memberships/${options.id}`, {
+    method: create ? 'POST' : 'PATCH', body: JSON.stringify(payload),
+  });
+  console.log(`✅ ${create ? 'Created' : 'Updated'} membership: ${result?.id || options.id}`);
 }
 
 async function cmdVersionList(options) {
@@ -2588,6 +2629,30 @@ program.command('priority-list').description('List priorities').action(wrap(cmdP
 program.command('member-list').description('List project members')
   .option('-p, --project <id>', 'Project identifier')
   .action(wrap(cmdMemberList));
+
+program.command('member-read').description('Read a membership as JSON')
+  .requiredOption('--id <id>', 'Membership ID', numericId)
+  .action(wrap(options => cmdResourceRead(options, 'memberships')));
+
+program.command('member-create').description('Create a project membership')
+  .option('--project <id>', 'Project ID or identifier (defaults to OP_DEFAULT_PROJECT)', projectRef)
+  .requiredOption('--principal <id>', 'User, group or placeholder ID', numericId)
+  .option('--principal-type <type>', 'Principal type: user, group, placeholder', choice('user', 'group', 'placeholder'))
+  .requiredOption('--roles <ids>', 'Comma-separated role IDs (complete role set)', idList)
+  .action(wrap(options => cmdMemberWrite(options, true)));
+
+program.command('member-update').description('Update a membership; --roles replaces all roles')
+  .requiredOption('--id <id>', 'Membership ID', numericId)
+  .option('--project <id>', 'Project ID or identifier', projectRef)
+  .option('--principal <id>', 'User, group or placeholder ID', numericId)
+  .option('--principal-type <type>', 'Principal type: user, group, placeholder', choice('user', 'group', 'placeholder'))
+  .option('--roles <ids>', 'Comma-separated complete role set', idList)
+  .action(wrap(options => cmdMemberWrite(options)));
+
+program.command('member-delete').description('Delete a membership')
+  .requiredOption('--id <id>', 'Membership ID', numericId)
+  .option('--confirm', 'Confirm deletion')
+  .action(wrap(options => cmdResourceDelete(options, 'memberships')));
 
 program.command('version-list').description('List project versions/milestones')
   .option('-p, --project <id>', 'Project identifier')
