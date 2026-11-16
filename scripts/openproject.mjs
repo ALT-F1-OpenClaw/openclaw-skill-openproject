@@ -883,6 +883,19 @@ async function cmdVersionList(options) {
   console.log(`\n${resp._embedded.elements.length} version(s)`);
 }
 
+async function cmdVersionWrite(options, create = false) {
+  const payload = {};
+  for (const field of ['name', 'status', 'sharing', 'startDate', 'endDate']) if (options[field] !== undefined) payload[field] = options[field];
+  if (options.description !== undefined) payload.description = { format: 'markdown', raw: options.description };
+  if (payload.startDate && payload.endDate && payload.startDate > payload.endDate) throw new Error('--end-date must be on or after --start-date');
+  if (create || options.project !== undefined) payload._links = { definingProject: { href: `/api/v3/projects/${await resolveProject(options.project)}` } };
+  requireChanges(payload);
+  const result = await opFetch(create ? '/versions' : `/versions/${options.id}`, {
+    method: create ? 'POST' : 'PATCH', body: JSON.stringify(payload),
+  });
+  console.log(`✅ ${create ? 'Created' : 'Updated'} version: ${result?.id || options.id}`);
+}
+
 async function cmdCategoryList(options) {
   const project = options.project || CFG.defaultProject;
   if (!project) {
@@ -2657,6 +2670,28 @@ program.command('member-delete').description('Delete a membership')
 program.command('version-list').description('List project versions/milestones')
   .option('-p, --project <id>', 'Project identifier')
   .action(wrap(cmdVersionList));
+
+program.command('version-read').description('Read a version as JSON')
+  .requiredOption('--id <id>', 'Version ID', numericId)
+  .action(wrap(options => cmdResourceRead(options, 'versions')));
+
+for (const action of ['create', 'update']) {
+  const command = program.command(`version-${action}`).description(`${action === 'create' ? 'Create' : 'Update'} a version`);
+  if (action === 'update') command.requiredOption('--id <id>', 'Version ID', numericId);
+  command[action === 'create' ? 'requiredOption' : 'option']('--name <name>', 'Version name')
+    .option('--project <id>', 'Defining project ID or identifier (create defaults to OP_DEFAULT_PROJECT)', projectRef)
+    .option('--description <text>', 'Description (empty string clears it)')
+    .option('--status <status>', 'open, locked or closed', choice('open', 'locked', 'closed'))
+    .option('--sharing <sharing>', 'none, descendants, hierarchy, tree or system', choice('none', 'descendants', 'hierarchy', 'tree', 'system'))
+    .option('--start-date <date>', 'YYYY-MM-DD, or none to clear', value => value === 'none' ? null : dateValue(value))
+    .option('--end-date <date>', 'YYYY-MM-DD, or none to clear', value => value === 'none' ? null : dateValue(value))
+    .action(wrap(options => cmdVersionWrite(options, action === 'create')));
+}
+
+program.command('version-delete').description('Delete a version')
+  .requiredOption('--id <id>', 'Version ID', numericId)
+  .option('--confirm', 'Confirm deletion')
+  .action(wrap(options => cmdResourceDelete(options, 'versions')));
 
 program.command('category-list').description('List project categories')
   .option('-p, --project <id>', 'Project identifier')

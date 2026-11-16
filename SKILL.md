@@ -500,6 +500,10 @@ node {baseDir}/scripts/openproject.mjs member-delete --id 7 --confirm
 
 # List versions/milestones
 node {baseDir}/scripts/openproject.mjs version-list --project my-project
+node {baseDir}/scripts/openproject.mjs version-read --id 4
+node {baseDir}/scripts/openproject.mjs version-create --project my-project --name v1 --start-date 2026-11-16 --end-date 2026-11-20 --sharing descendants
+node {baseDir}/scripts/openproject.mjs version-update --id 4 --status closed --end-date none
+node {baseDir}/scripts/openproject.mjs version-delete --id 4 --confirm
 
 # List categories
 node {baseDir}/scripts/openproject.mjs category-list --project my-project
