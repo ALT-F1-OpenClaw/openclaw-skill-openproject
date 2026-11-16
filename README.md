@@ -98,7 +98,7 @@ node scripts/openproject.mjs wp-create --project my-project --subject "My first 
 
 See [SKILL.md](./SKILL.md) for full command reference.
 
-### 125 commands across 34 command groups:
+### 140 commands across 37 command groups:
 
 | Entity | Commands |
 |--------|----------|
@@ -119,6 +119,9 @@ See [SKILL.md](./SKILL.md) for full command reference.
 | Placeholder Users 🏢 | `placeholder-user-list`, `placeholder-user-read`, `placeholder-user-create`, `placeholder-user-update`, `placeholder-user-delete` |
 | Budgets 🏢 | `budget-list`, `budget-read` |
 | Meetings | `meeting-list`, `meeting-create`, `meeting-read`, `meeting-update`, `meeting-delete`, `meeting-attachment-list`, `meeting-attachment-add` |
+| Meeting Agenda Items | `meeting-agenda-item-list`, `meeting-agenda-item-read`, `meeting-agenda-item-create`, `meeting-agenda-item-update`, `meeting-agenda-item-delete` |
+| Meeting Outcomes | `meeting-outcome-list`, `meeting-outcome-read`, `meeting-outcome-create`, `meeting-outcome-update`, `meeting-outcome-delete` |
+| Meeting Sections | `meeting-section-list`, `meeting-section-read`, `meeting-section-create`, `meeting-section-update`, `meeting-section-delete` |
 | Days | `day-read`, `days-list`, `non-working-days-list`, `non-working-day-read`, `week-days-list`, `week-day-read` |
 | Configuration | `config-read`, `project-config-read` |
 | OAuth | `oauth-app-read`, `oauth-credentials-read` |

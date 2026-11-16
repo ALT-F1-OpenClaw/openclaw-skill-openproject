@@ -300,7 +300,7 @@ node {baseDir}/scripts/openproject.mjs budget-list --project my-project
 node {baseDir}/scripts/openproject.mjs budget-read --id 3
 ```
 
-### Meetings (Enterprise)
+### Meetings
 
 ```bash
 node {baseDir}/scripts/openproject.mjs meeting-list --page 1
@@ -320,6 +320,32 @@ node {baseDir}/scripts/openproject.mjs meeting-attachment-add --id 10 --file ./a
 ```
 
 Meeting updates fetch the current `lockVersion`; concurrent modification errors are reported without retrying the change. Start times require an explicit timezone.
+
+### Meeting Agenda Items, Outcomes and Sections
+
+```bash
+node {baseDir}/scripts/openproject.mjs meeting-section-list --meeting-id 10
+node {baseDir}/scripts/openproject.mjs meeting-section-create --meeting-id 10 --title "Planning"
+node {baseDir}/scripts/openproject.mjs meeting-section-read --id 7
+node {baseDir}/scripts/openproject.mjs meeting-section-update --id 7 --title "Release planning"
+node {baseDir}/scripts/openproject.mjs meeting-section-delete --id 7 --confirm
+
+node {baseDir}/scripts/openproject.mjs meeting-agenda-item-list --meeting-id 10
+node {baseDir}/scripts/openproject.mjs meeting-agenda-item-create --meeting-id 10 --title "Review" --duration-minutes 15 --presenter-id 5 --section-id 7
+node {baseDir}/scripts/openproject.mjs meeting-agenda-item-create --meeting-id 10 --wp-id 42
+node {baseDir}/scripts/openproject.mjs meeting-agenda-item-read --id 8
+node {baseDir}/scripts/openproject.mjs meeting-agenda-item-update --id 8 --notes "Updated notes" --duration-minutes none
+node {baseDir}/scripts/openproject.mjs meeting-agenda-item-delete --id 8 --confirm
+
+node {baseDir}/scripts/openproject.mjs meeting-outcome-list --meeting-id 10 --agenda-item-id 8
+node {baseDir}/scripts/openproject.mjs meeting-outcome-create --agenda-item-id 8 --notes "Decision agreed"
+node {baseDir}/scripts/openproject.mjs meeting-outcome-create --agenda-item-id 8 --wp-id 42
+node {baseDir}/scripts/openproject.mjs meeting-outcome-read --id 9
+node {baseDir}/scripts/openproject.mjs meeting-outcome-update --id 9 --notes "Updated decision"
+node {baseDir}/scripts/openproject.mjs meeting-outcome-delete --id 9 --confirm
+```
+
+List and read commands return full JSON records. Agenda item updates fetch the current lock version. Use `none` to clear an agenda item's duration, presenter, section or work package link. Outcomes linked with `--wp-id` use kind `work_package` automatically.
 
 ### Days (Working/Non-Working)
 

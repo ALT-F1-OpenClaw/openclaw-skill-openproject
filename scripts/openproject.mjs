@@ -200,6 +200,14 @@ function idList(value) {
   return value.split(',').map(id => numericId(id.trim()));
 }
 
+function optionalId(value) { return value === 'none' ? value : numericId(value); }
+
+function minutesValue(value) {
+  if (value === 'none') return value;
+  if (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value))) throw new InvalidArgumentError('Expected whole minutes, or none to clear');
+  return Number(value);
+}
+
 function dateValue(value) {
   const date = new Date(`${value}T00:00:00Z`);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value) {
@@ -1473,6 +1481,53 @@ async function cmdMeetingWrite(options, create = false) {
     await updateLocked(`/meetings/${options.id}`, payload);
     console.log(`✅ Updated meeting: ${options.id}`);
   }
+}
+
+const MEETING_CONTENT = {
+  'agenda-item': 'meeting_agenda_items', outcome: 'meeting_outcomes', section: 'meeting_sections',
+};
+
+async function cmdMeetingContentList(options, kind) {
+  const path = kind === 'outcome'
+    ? `/meetings/${options.meetingId}/agenda_items/${options.agendaItemId}/outcomes`
+    : `/meetings/${options.meetingId}/${kind === 'section' ? 'sections' : 'agenda_items'}`;
+  console.log(JSON.stringify(await opFetch(path), null, 2));
+}
+
+async function cmdMeetingContentWrite(options, kind, create = false) {
+  const payload = {};
+  const links = {};
+  if (options.title !== undefined) payload.title = options.title;
+  if (options.notes !== undefined) payload.notes = { format: 'markdown', raw: options.notes };
+  if (create) {
+    if (kind === 'outcome') links.agendaItem = { href: `/api/v3/meeting_agenda_items/${options.agendaItemId}` };
+    else links.meeting = { href: `/api/v3/meetings/${options.meetingId}` };
+  }
+  if (kind === 'agenda-item') {
+    if (create && !options.title && (!options.wpId || options.wpId === 'none')) throw new Error('Provide --title or --wp-id for an agenda item');
+    if (options.durationMinutes !== undefined) payload.durationInMinutes = options.durationMinutes === 'none' ? null : options.durationMinutes;
+    for (const field of ['presenter', 'section']) {
+      const value = options[`${field}Id`];
+      if (value !== undefined) links[field] = { href: value === 'none' ? null : `/api/v3/${field === 'presenter' ? 'users' : 'meeting_sections'}/${value}` };
+    }
+  }
+  if (kind === 'outcome') {
+    if (create && options.notes === undefined && (!options.wpId || options.wpId === 'none')) throw new Error('Provide --notes or --wp-id for an outcome');
+    if (options.kind !== undefined) payload.kind = options.kind;
+    else if (create) payload.kind = 'information';
+    if (options.kind === 'information' && options.wpId && options.wpId !== 'none') throw new Error('A work package outcome must use --kind work_package');
+  }
+  if (options.wpId !== undefined) {
+    links.workPackage = { href: options.wpId === 'none' ? null : `/api/v3/work_packages/${options.wpId}` };
+    payload[kind === 'outcome' ? 'kind' : 'itemType'] = options.wpId === 'none' ? (kind === 'outcome' ? 'information' : 'simple') : 'work_package';
+  }
+  if (Object.keys(links).length) payload._links = links;
+  requireChanges(payload);
+  const resource = MEETING_CONTENT[kind];
+  let result;
+  if (!create && kind === 'agenda-item') await updateLocked(`/${resource}/${options.id}`, payload);
+  else result = await opFetch(create ? `/${resource}` : `/${resource}/${options.id}`, { method: create ? 'POST' : 'PATCH', body: JSON.stringify(payload) });
+  console.log(`✅ ${create ? 'Created' : 'Updated'} meeting ${kind}: ${result?.id || options.id}`);
 }
 
 async function cmdMeetingRead(options) {
@@ -2947,6 +3002,39 @@ program.command('meeting-delete').description('Delete a meeting')
   .requiredOption('--id <id>', 'Meeting ID', numericId)
   .option('--confirm', 'Confirm deletion')
   .action(wrap(options => cmdResourceDelete(options, 'meetings')));
+
+for (const [kind, resource] of Object.entries(MEETING_CONTENT)) {
+  const prefix = `meeting-${kind}`;
+  const list = program.command(`${prefix}-list`).description(`List meeting ${kind} records as JSON`)
+    .requiredOption('--meeting-id <id>', 'Meeting ID', numericId);
+  if (kind === 'outcome') list.requiredOption('--agenda-item-id <id>', 'Agenda item ID', numericId);
+  list.action(wrap(options => cmdMeetingContentList(options, kind)));
+  program.command(`${prefix}-read`).description(`Read a meeting ${kind} as JSON`)
+    .requiredOption('--id <id>', `${kind} ID`, numericId)
+    .action(wrap(options => cmdResourceRead(options, resource)));
+  program.command(`${prefix}-delete`).description(`Delete a meeting ${kind}`)
+    .requiredOption('--id <id>', `${kind} ID`, numericId)
+    .option('--confirm', 'Confirm deletion')
+    .action(wrap(options => cmdResourceDelete(options, resource)));
+  for (const action of ['create', 'update']) {
+    const command = program.command(`${prefix}-${action}`).description(`${action === 'create' ? 'Create' : 'Update'} a meeting ${kind}`);
+    if (action === 'update') command.requiredOption('--id <id>', `${kind} ID`, numericId);
+    else if (kind === 'outcome') command.requiredOption('--agenda-item-id <id>', 'Agenda item ID', numericId);
+    else command.requiredOption('--meeting-id <id>', 'Meeting ID', numericId);
+    if (kind === 'section') command[action === 'create' ? 'requiredOption' : 'option']('--title <title>', 'Section title');
+    else {
+      command.option('--notes <text>', 'Markdown notes (empty string clears them)')
+        .option('--wp-id <id>', 'Linked work package ID, or none to clear', optionalId);
+      if (kind === 'agenda-item') {
+        command.option('--title <title>', 'Agenda title (required for simple items)')
+          .option('--duration-minutes <minutes>', 'Whole minutes, or none to clear', minutesValue)
+          .option('--presenter-id <id>', 'Presenter user ID, or none to clear', optionalId)
+          .option('--section-id <id>', 'Section ID, or none to clear', optionalId);
+      } else command.option('--kind <kind>', 'information or work_package', choice('information', 'work_package'));
+    }
+    command.action(wrap(options => cmdMeetingContentWrite(options, kind, action === 'create')));
+  }
+}
 
 program.command('meeting-attachment-list').description('List meeting attachments (Enterprise)')
   .requiredOption('--id <id>', 'Meeting ID')
