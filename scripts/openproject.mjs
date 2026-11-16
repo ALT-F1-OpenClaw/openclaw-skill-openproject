@@ -835,7 +835,11 @@ async function cmdRevisionListByWp(options) {
 
 async function cmdCapabilityList(options) {
   const filters = [];
-  if (options.context) filters.push({ context: { operator: '=', values: [options.context] } });
+  if (options.context) {
+    const context = options.context === 'global' ? 'g'
+      : /^\d+$/.test(options.context) ? `w${options.context}` : options.context;
+    filters.push({ context: { operator: '=', values: [context] } });
+  }
   if (options.action) filters.push({ action: { operator: '=', values: [options.action] } });
   if (options.principal) filters.push({ principal: { operator: '=', values: [options.principal] } });
   const filterParam = filters.length ? `&filters=${encodeURIComponent(JSON.stringify(filters))}` : '';
@@ -851,7 +855,8 @@ async function cmdCapabilityList(options) {
 }
 
 async function cmdCapabilityGlobal() {
-  const resp = await opFetch('/capabilities/context/global');
+  const filters = encodeURIComponent(JSON.stringify([{ context: { operator: '=', values: ['g'] } }]));
+  const resp = await opFetch(`/capabilities?pageSize=${CFG.maxResults}&filters=${filters}`);
   if (!resp._embedded.elements.length) { console.log('No global capabilities.'); return; }
   for (const c of resp._embedded.elements) {
     const action = halLink(c, 'action') || '?';
@@ -2516,7 +2521,7 @@ program.command('revision-list-by-wp').description('List revisions for a work pa
 
 // Capabilities & Actions
 program.command('capability-list').description('List capabilities')
-  .option('--context <id>', 'Filter by context (project ID or "global")')
+  .option('--context <id>', 'Filter by workspace ID, "global", or API context (w<ID>/p<ID>/g)')
   .option('--action <id>', 'Filter by action')
   .option('--principal <id>', 'Filter by principal (user/group ID)')
   .action(wrap(cmdCapabilityList));

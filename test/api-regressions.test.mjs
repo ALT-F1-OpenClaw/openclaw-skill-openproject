@@ -1,0 +1,69 @@
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import test from 'node:test';
+
+const root = fileURLToPath(new URL('../', import.meta.url));
+const mock = fileURLToPath(new URL('./fixtures/mock-fetch.cjs', import.meta.url));
+const cli = fileURLToPath(new URL('../scripts/openproject.mjs', import.meta.url));
+
+function runCli(args, requests, env = {}) {
+  const result = spawnSync(process.execPath, ['--require', mock, cli, ...args], {
+    cwd: root,
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      OP_HOST: 'https://openproject.example.invalid',
+      OP_API_TOKEN: 'test-token',
+      OP_DEFAULT_PROJECT: '',
+      OP_MAX_RESULTS: '50',
+      OP_TEST_REQUESTS: JSON.stringify(requests),
+      ...env,
+    },
+  });
+  assert.ifError(result.error);
+  return result;
+}
+
+const globalCapabilities = {
+  path: '/capabilities',
+  query: { pageSize: '50', filters: [{ context: { operator: '=', values: ['g'] } }] },
+  response: { _embedded: { elements: [{ id: 'users/create/g-1', _links: { action: { title: 'Create users' } } }] }, total: 1 },
+};
+
+test('capability-global lists capabilities from the filtered collection', () => {
+  const result = runCli(['capability-global'], [globalCapabilities]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Create users/);
+  assert.match(result.stdout, /1 global capability/);
+});
+
+test('capability-global handles an empty collection', () => {
+  const result = runCli(['capability-global'], [{
+    ...globalCapabilities, response: { _embedded: { elements: [] }, total: 0 },
+  }]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /No global capabilities/);
+});
+
+test('capability-list accepts the documented global alias', () => {
+  const result = runCli(['capability-list', '--context', 'global'], [globalCapabilities]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Create users/);
+});
+
+test('capability-list maps a numeric workspace ID to its API context', () => {
+  const result = runCli(['capability-list', '--context', '9'], [{
+    ...globalCapabilities,
+    query: { pageSize: '50', filters: [{ context: { operator: '=', values: ['w9'] } }] },
+  }]);
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test('capability-list preserves a legacy project API context', () => {
+  const result = runCli(['capability-list', '--context', 'p9'], [{
+    ...globalCapabilities,
+    query: { pageSize: '50', filters: [{ context: { operator: '=', values: ['p9'] } }] },
+  }]);
+  assert.equal(result.status, 0, result.stderr);
+});

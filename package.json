@@ -8,7 +8,8 @@
   },
   "scripts": {
     "start": "node scripts/openproject.mjs",
-    "help": "node scripts/openproject.mjs --help"
+    "help": "node scripts/openproject.mjs --help",
+    "test": "node --test test/*.test.mjs"
   },
   "keywords": [
     "openclaw",
