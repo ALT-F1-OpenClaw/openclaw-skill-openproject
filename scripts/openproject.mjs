@@ -180,7 +180,7 @@ function numericId(value, label = 'ID') {
 
 function projectRef(value) {
   if (/^\d+$/.test(value)) return numericId(value, 'Project');
-  if (!/^[a-zA-Z][a-zA-Z0-9_-]*$/.test(value)) throw new InvalidArgumentError('Project must be a numeric ID or identifier slug');
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/.test(value)) throw new InvalidArgumentError('Project must be a numeric ID or identifier slug');
   return value;
 }
 
@@ -602,6 +602,13 @@ async function cmdProjectDelete(options) {
 }
 
 // ── Comment (Activity) commands ─────────────────────────────────────────────
+
+async function cmdCommentUpdate(options) {
+  const payload = { comment: { raw: options.body } };
+  if (options.internal !== undefined) payload.internal = options.internal;
+  await opFetch(`/activities/${options.id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+  console.log(`✅ Updated comment: ${options.id}`);
+}
 
 async function cmdCommentList(options) {
   if (!options.wpId) {
@@ -2722,6 +2729,16 @@ program.command('comment-add').description('Add a comment to a work package')
   .requiredOption('--wp-id <id>', 'Work package ID')
   .requiredOption('-b, --body <text>', 'Comment body (markdown)')
   .action(wrap(cmdCommentAdd));
+
+program.command('comment-read').description('Read an activity/comment as JSON')
+  .requiredOption('--id <id>', 'Activity ID from comment-list', numericId)
+  .action(wrap(options => cmdResourceRead(options, 'activities')));
+
+program.command('comment-update').description('Edit an existing activity comment')
+  .requiredOption('--id <id>', 'Activity ID from comment-list', numericId)
+  .requiredOption('-b, --body <text>', 'Replacement markdown comment')
+  .option('--internal <bool>', 'Internal comment (true/false; requires permission)', booleanValue)
+  .action(wrap(cmdCommentUpdate));
 
 // Attachments
 program.command('attachment-list').description('List attachments on a work package')

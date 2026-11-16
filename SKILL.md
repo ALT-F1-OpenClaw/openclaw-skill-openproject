@@ -88,6 +88,11 @@ node {baseDir}/scripts/openproject.mjs comment-list --wp-id 42
 
 # Add a comment
 node {baseDir}/scripts/openproject.mjs comment-add --wp-id 42 --body "Ready for review"
+
+# Use the activity ID shown by comment-list, rather than the work package ID
+node {baseDir}/scripts/openproject.mjs comment-read --id 21
+node {baseDir}/scripts/openproject.mjs comment-update --id 21 --body "Updated review notes"
+node {baseDir}/scripts/openproject.mjs comment-update --id 21 --body "Public update" --internal false
 ```
 
 ### Attachments

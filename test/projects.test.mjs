@@ -63,6 +63,13 @@ test('project parent removal uses an explicit null href', () => {
   assert.equal(r.status, 0, r.stderr);
 });
 
+test('project identifiers may start with digits without becoming numeric IDs', () => {
+  const r = runCli(['project-update', '--id', '2026-roadmap', '--name', 'Roadmap'], [{
+    path: '/projects/2026-roadmap', method: 'PATCH', json: { name: 'Roadmap' }, response: {},
+  }]);
+  assert.equal(r.status, 0, r.stderr);
+});
+
 test('project visibility and archive updates require confirmation', () => {
   for (const field of ['--public', '--active']) {
     const r = runCli(['project-update', '--id', 'demo', field, 'false']);

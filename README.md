@@ -55,7 +55,7 @@ By [Abdelkrim BOUJRAF](https://www.alt-f1.be) / ALT-F1 SRL, Brussels 🇧🇪 �
 - **Watchers** — List, add, remove watchers on work packages
 - **Relations** — Create, read, update, delete relations between work packages (blocks, follows, precedes, etc.)
 - **Notifications** — List, read, mark read/unread with filters (reason, project, work package)
-- **Comments** — List and add comments on work packages
+- **Comments** — List, add, read and edit comments
 - **Attachments** — List, upload, and delete
 - **Time Entries** — CRUD time tracking with hours, dates, and activity types
 - **Statuses & Transitions** — List statuses, update work package status
@@ -98,7 +98,7 @@ node scripts/openproject.mjs wp-create --project my-project --subject "My first 
 
 See [SKILL.md](./SKILL.md) for full command reference.
 
-### 145 commands across 37 command groups:
+### 147 commands across 37 command groups:
 
 | Entity | Commands |
 |--------|----------|
@@ -133,7 +133,7 @@ See [SKILL.md](./SKILL.md) for full command reference.
 | Watchers | `watcher-list`, `watcher-add`, `watcher-remove`, `watcher-available` |
 | Relations | `relation-list`, `relation-read`, `relation-create`, `relation-update`, `relation-delete` |
 | Notifications | `notification-list`, `notification-read`, `notification-mark-read`, `notification-mark-unread` |
-| Comments | `comment-list`, `comment-add` |
+| Comments | `comment-list`, `comment-add`, `comment-read`, `comment-update` |
 | Attachments | `attachment-list`, `attachment-add`, `attachment-delete` |
 | Time Entries | `time-list`, `time-create`, `time-update`, `time-delete` |
 | Wiki Pages | `wiki-read`, `wiki-attachment-list`, `wiki-attachment-add` |
