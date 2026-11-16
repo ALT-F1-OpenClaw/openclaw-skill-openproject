@@ -67,3 +67,49 @@ test('capability-list preserves a legacy project API context', () => {
   }]);
   assert.equal(result.status, 0, result.stderr);
 });
+
+const projectMemberships = {
+  path: '/memberships',
+  query: { pageSize: '50', filters: [{ project: { operator: '=', values: ['9'] } }] },
+  response: {
+    _embedded: { elements: [{
+      _links: { principal: { title: 'Ada Lovelace' } },
+      _embedded: { roles: [{ name: 'Member' }] },
+    }] },
+    total: 1,
+  },
+};
+
+test('member-list resolves a project slug and filters memberships by numeric ID', () => {
+  const result = runCli(['member-list', '--project', 'my-project'], [
+    { path: '/projects/my-project', response: { id: 9 } }, projectMemberships,
+  ], { OP_DEFAULT_PROJECT: 'another-project' });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Ada Lovelace/);
+  assert.match(result.stdout, /Member/);
+});
+
+test('member-list accepts a numeric project ID and an empty result', () => {
+  const result = runCli(['member-list', '--project', '9'], [
+    { path: '/projects/9', response: { id: 9 } },
+    { ...projectMemberships, response: { _embedded: { elements: [] }, total: 0 } },
+  ]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /No members found/);
+});
+
+test('member-list uses the configured default project', () => {
+  const result = runCli(['member-list'], [
+    { path: '/projects/default-project', response: { id: 9 } }, projectMemberships,
+  ], { OP_DEFAULT_PROJECT: 'default-project' });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Ada Lovelace/);
+});
+
+test('member-list reports project lookup failures', () => {
+  const result = runCli(['member-list', '--project', 'missing'], [{
+    path: '/projects/missing', status: 404, response: { message: 'Project not found' },
+  }]);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /ERROR \(404\): Project not found/);
+});

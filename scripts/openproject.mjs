@@ -719,7 +719,9 @@ async function cmdMemberList(options) {
     process.exit(1);
   }
 
-  const resp = await opFetch(`/projects/${project}/memberships?pageSize=${CFG.maxResults}`);
+  const proj = await opFetch(`/projects/${encodeURIComponent(project)}`);
+  const filters = encodeURIComponent(JSON.stringify([{ project: { operator: '=', values: [String(proj.id)] } }]));
+  const resp = await opFetch(`/memberships?pageSize=${CFG.maxResults}&filters=${filters}`);
 
   if (!resp._embedded.elements.length) {
     console.log('No members found.');
