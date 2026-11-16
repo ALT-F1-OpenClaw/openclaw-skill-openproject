@@ -36,10 +36,14 @@ node {baseDir}/scripts/openproject.mjs wp-list --project my-project --open --ass
 node {baseDir}/scripts/openproject.mjs wp-list --project my-project --status "In progress"
 
 # List work packages as JSON — paginated, includes start/due dates + description
-node {baseDir}/scripts/openproject.mjs wp-list --status open --json
+node {baseDir}/scripts/openproject.mjs wp-list --open --json
 
 # Create a work package
 node {baseDir}/scripts/openproject.mjs wp-create --project my-project --type Task --subject "Fix login bug" --description "Users can't log in"
+node {baseDir}/scripts/openproject.mjs wp-create --project my-project --subject "Plan release" --assignee 5 --start-date 2026-11-16 --due-date 2026-11-20 --estimate PT2H30M
+
+# Milestones use --date instead of --start-date/--due-date
+node {baseDir}/scripts/openproject.mjs wp-create --project my-project --type Milestone --subject "Release" --date 2026-11-20
 
 # Read work package details
 node {baseDir}/scripts/openproject.mjs wp-read --id 42
@@ -49,6 +53,7 @@ node {baseDir}/scripts/openproject.mjs wp-read --id 42 --json
 
 # Update a work package
 node {baseDir}/scripts/openproject.mjs wp-update --id 42 --subject "New title" --priority High
+node {baseDir}/scripts/openproject.mjs wp-update --id 42 --assignee none --estimate PT1H
 
 # Delete a work package (requires --confirm)
 node {baseDir}/scripts/openproject.mjs wp-delete --id 42 --confirm
@@ -65,6 +70,14 @@ node {baseDir}/scripts/openproject.mjs project-read --id my-project
 
 # Create a project
 node {baseDir}/scripts/openproject.mjs project-create --name "My Project" --identifier my-project
+node {baseDir}/scripts/openproject.mjs project-create --name "Child Project" --parent my-project --public false
+
+# Update fields or remove a parent; visibility/archive changes require --confirm
+node {baseDir}/scripts/openproject.mjs project-update --id my-project --name "Renamed" --parent none
+node {baseDir}/scripts/openproject.mjs project-update --id my-project --active false --confirm
+
+# Delete a project
+node {baseDir}/scripts/openproject.mjs project-delete --id my-project --confirm
 ```
 
 ### Comments (Activities)

@@ -17,6 +17,7 @@ globalThis.fetch = async (input, options = {}) => {
     assert.equal(new Headers(options.headers).get(name), value);
   }
   if (expected.body !== undefined) assert.equal(options.body, expected.body);
+  if (expected.json !== undefined) assert.deepEqual(JSON.parse(options.body), expected.json);
 
   const status = expected.status || 200;
   const body = status === 204 ? null : expected.text ?? JSON.stringify(expected.response);

@@ -28,7 +28,7 @@ By [Abdelkrim BOUJRAF](https://www.alt-f1.be) / ALT-F1 SRL, Brussels 🇧🇪 �
 ## Features
 
 - **Work Packages** — Create, read, update, delete, list with filters (status, assignee, type)
-- **Projects** — List, read, create
+- **Projects** — List, read, create, update, delete, and set/remove parents
 - **Users** — List, search, read user details, view current user
 - **Documents** — List, read, update documents
 - **Revisions** — Read revisions, list by work package
@@ -98,12 +98,12 @@ node scripts/openproject.mjs wp-create --project my-project --subject "My first 
 
 See [SKILL.md](./SKILL.md) for full command reference.
 
-### 111 commands across 34 command groups:
+### 113 commands across 34 command groups:
 
 | Entity | Commands |
 |--------|----------|
 | Work Packages | `wp-list`, `wp-create`, `wp-read`, `wp-update`, `wp-delete` |
-| Projects | `project-list`, `project-read`, `project-create` |
+| Projects | `project-list`, `project-read`, `project-create`, `project-update`, `project-delete` |
 | Users | `user-list`, `user-read`, `user-me` |
 | Documents | `document-list`, `document-read`, `document-update` |
 | Revisions | `revision-read`, `revision-list-by-wp` |
