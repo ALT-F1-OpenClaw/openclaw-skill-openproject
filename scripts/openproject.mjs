@@ -117,13 +117,13 @@ async function opFetch(path, options = {}, retries = 3) {
     if (resp.status === 204) return null;
 
     const body = await resp.text();
-    let json;
-    try { json = JSON.parse(body); } catch { json = null; }
+    let data;
+    try { data = JSON.parse(body); } catch { data = body; }
 
     if (!resp.ok) {
-      const msg = json?.message
-        || json?.errorIdentifier
-        || json?._embedded?.errors?.map(e => e.message).join(', ')
+      const msg = data?.message
+        || data?.errorIdentifier
+        || data?._embedded?.errors?.map(e => e.message).join(', ')
         || body
         || resp.statusText;
       const err = new Error(msg);
@@ -131,7 +131,7 @@ async function opFetch(path, options = {}, retries = 3) {
       throw err;
     }
 
-    return json;
+    return data;
   }
 }
 
@@ -911,7 +911,7 @@ async function cmdRenderMarkdown(options) {
   if (!options.text) { console.error('ERROR: --text is required'); process.exit(1); }
   const result = await opFetch('/render/markdown', {
     method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
+    headers: { 'Content-Type': 'text/plain', 'Accept': 'text/html' },
     body: options.text,
   });
   console.log(typeof result === 'string' ? result : result?.html || JSON.stringify(result));
@@ -921,7 +921,7 @@ async function cmdRenderPlain(options) {
   if (!options.text) { console.error('ERROR: --text is required'); process.exit(1); }
   const result = await opFetch('/render/plain', {
     method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
+    headers: { 'Content-Type': 'text/plain', 'Accept': 'text/html' },
     body: options.text,
   });
   console.log(typeof result === 'string' ? result : result?.html || JSON.stringify(result));

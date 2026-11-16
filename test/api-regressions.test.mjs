@@ -113,3 +113,28 @@ test('member-list reports project lookup failures', () => {
   assert.equal(result.status, 1);
   assert.match(result.stderr, /ERROR \(404\): Project not found/);
 });
+
+for (const [command, path, input, html] of [
+  ['render-markdown', '/render/markdown', '**Hello**', '<p><strong>Hello</strong></p>'],
+  ['render-plain', '/render/plain', '**Hello**', '<p>**Hello**</p>'],
+]) {
+  test(`${command} requests and prints HTML with a plain text request body`, () => {
+    const result = runCli([command, '--text', input], [{
+      path, method: 'POST', body: input,
+      headers: { 'Content-Type': 'text/plain', Accept: 'text/html' },
+      contentType: 'text/html; charset=utf-8', text: html,
+    }]);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout.trim(), html);
+  });
+}
+
+test('render commands still surface plain text HTTP errors', () => {
+  const result = runCli(['render-markdown', '--text', 'Hello'], [{
+    path: '/render/markdown', method: 'POST', status: 403,
+    contentType: 'text/plain', text: 'Rendering denied',
+  }]);
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, '');
+  assert.match(result.stderr, /ERROR \(403\): Rendering denied/);
+});
