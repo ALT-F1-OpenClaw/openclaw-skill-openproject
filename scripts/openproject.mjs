@@ -215,6 +215,14 @@ function durationValue(value) {
   return value;
 }
 
+function timestampValue(value) {
+  dateValue(value.slice(0, 10));
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/.test(value) || Number.isNaN(Date.parse(value))) {
+    throw new InvalidArgumentError('Expected an ISO 8601 timestamp with timezone, e.g. 2026-11-20T10:00:00Z');
+  }
+  return value;
+}
+
 function requireConfirm(options, action) {
   if (!options.confirm) throw new Error(`${action} requires --confirm`);
 }
@@ -239,6 +247,13 @@ async function cmdResourceDelete(options, resource) {
   requireConfirm(options, `Deleting ${resource}`);
   await opFetch(`/${resource}/${options.id}`, { method: 'DELETE' });
   console.log(`✅ Deleted ${resource}: ${options.id}`);
+}
+
+async function updateLocked(path, payload) {
+  requireChanges(payload);
+  const current = await opFetch(path);
+  if (!Number.isInteger(current.lockVersion)) throw new Error('API response is missing lockVersion; update cancelled');
+  await opFetch(path, { method: 'PATCH', body: JSON.stringify({ ...payload, lockVersion: current.lockVersion }) });
 }
 
 function wpSchedule(options) {
@@ -1440,6 +1455,26 @@ async function cmdBudgetList(options) {
 
 // ── Meeting commands (Enterprise) ────────────────────────────────────────────
 
+async function cmdMeetingList(options) {
+  const result = await opFetch(`/meetings?pageSize=${CFG.maxResults}&offset=${options.page || 1}`);
+  console.log(JSON.stringify(result, null, 2));
+}
+
+async function cmdMeetingWrite(options, create = false) {
+  const payload = {};
+  for (const field of ['title', 'location', 'startTime', 'duration', 'state', 'template', 'sharing', 'notify']) {
+    if (options[field] !== undefined) payload[field] = options[field];
+  }
+  if (create) {
+    payload._links = { project: { href: `/api/v3/projects/${await resolveProject(options.project)}` } };
+    const meeting = await opFetch('/meetings', { method: 'POST', body: JSON.stringify(payload) });
+    console.log(`✅ Created meeting: ${meeting.id}`);
+  } else {
+    await updateLocked(`/meetings/${options.id}`, payload);
+    console.log(`✅ Updated meeting: ${options.id}`);
+  }
+}
+
 async function cmdMeetingRead(options) {
   if (!options.id) {
     console.error('ERROR: --id is required');
@@ -1447,6 +1482,7 @@ async function cmdMeetingRead(options) {
   }
 
   const m = await opFetch(`/meetings/${options.id}`);
+  if (options.json) { console.log(JSON.stringify(m, null, 2)); return; }
 
   console.log(`📅 Meeting #${m.id}: ${m.title || '?'}`);
   console.log(`   Type:        ${m._type || '?'}`);
@@ -2879,8 +2915,38 @@ program.command('budget-list').description('List project budgets (Enterprise)')
 
 // Meetings (Enterprise)
 program.command('meeting-read').description('Read a meeting (Enterprise)')
-  .requiredOption('--id <id>', 'Meeting ID')
+  .requiredOption('--id <id>', 'Meeting ID', numericId)
+  .option('--json', 'Return the full API record as JSON')
   .action(wrap(cmdMeetingRead));
+
+program.command('meeting-list').description('List visible meetings as JSON')
+  .option('--page <number>', 'Page number (default: 1)', numericId)
+  .action(wrap(cmdMeetingList));
+
+for (const action of ['create', 'update']) {
+  const command = program.command(`meeting-${action}`).description(`${action === 'create' ? 'Create' : 'Update'} a meeting`);
+  if (action === 'create') {
+    command.option('--project <id>', 'Project ID or identifier (defaults to OP_DEFAULT_PROJECT)', projectRef)
+      .requiredOption('--title <title>', 'Meeting title')
+      .requiredOption('--start-time <timestamp>', 'ISO 8601 start time with timezone', timestampValue);
+  } else {
+    command.requiredOption('--id <id>', 'Meeting ID', numericId)
+      .option('--title <title>', 'Meeting title')
+      .option('--start-time <timestamp>', 'ISO 8601 start time with timezone', timestampValue);
+  }
+  command.option('--location <text>', 'Location (empty string clears it)')
+    .option('--duration <duration>', 'ISO 8601 duration, e.g. PT1H', durationValue)
+    .option('--state <state>', 'open, draft, in_progress, cancelled or closed', choice('open', 'draft', 'in_progress', 'cancelled', 'closed'))
+    .option('--template <bool>', 'Whether this meeting is a template (true/false)', booleanValue)
+    .option('--sharing <sharing>', 'Template sharing: none, descendants or system', choice('none', 'descendants', 'system'))
+    .option('--notify <bool>', 'Send participant notifications (true/false)', booleanValue)
+    .action(wrap(options => cmdMeetingWrite(options, action === 'create')));
+}
+
+program.command('meeting-delete').description('Delete a meeting')
+  .requiredOption('--id <id>', 'Meeting ID', numericId)
+  .option('--confirm', 'Confirm deletion')
+  .action(wrap(options => cmdResourceDelete(options, 'meetings')));
 
 program.command('meeting-attachment-list').description('List meeting attachments (Enterprise)')
   .requiredOption('--id <id>', 'Meeting ID')

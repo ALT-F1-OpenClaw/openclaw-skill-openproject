@@ -303,8 +303,14 @@ node {baseDir}/scripts/openproject.mjs budget-read --id 3
 ### Meetings (Enterprise)
 
 ```bash
+node {baseDir}/scripts/openproject.mjs meeting-list --page 1
+node {baseDir}/scripts/openproject.mjs meeting-create --project my-project --title "Planning" --start-time 2026-11-20T10:00:00Z --duration PT1H --notify false
+
 # Read a meeting
 node {baseDir}/scripts/openproject.mjs meeting-read --id 10
+node {baseDir}/scripts/openproject.mjs meeting-read --id 10 --json
+node {baseDir}/scripts/openproject.mjs meeting-update --id 10 --state closed
+node {baseDir}/scripts/openproject.mjs meeting-delete --id 10 --confirm
 
 # List meeting attachments
 node {baseDir}/scripts/openproject.mjs meeting-attachment-list --id 10
@@ -312,6 +318,8 @@ node {baseDir}/scripts/openproject.mjs meeting-attachment-list --id 10
 # Upload attachment to a meeting
 node {baseDir}/scripts/openproject.mjs meeting-attachment-add --id 10 --file ./agenda.pdf
 ```
+
+Meeting updates fetch the current `lockVersion`; concurrent modification errors are reported without retrying the change. Start times require an explicit timezone.
 
 ### Days (Working/Non-Working)
 

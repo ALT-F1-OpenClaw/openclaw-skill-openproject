@@ -43,7 +43,7 @@ By [Abdelkrim BOUJRAF](https://www.alt-f1.be) / ALT-F1 SRL, Brussels 🇧🇪 �
 - **Programs** — List, read, update, delete programs (Enterprise)
 - **Placeholder Users** — Full CRUD for virtual resource planning users (Enterprise)
 - **Budgets** — List and read project budgets (Enterprise)
-- **Meetings** — Read meetings, list/upload attachments (Enterprise)
+- **Meetings** — List, create, read, update, delete meetings and list/upload attachments
 - **Days** — Working/non-working days, week schedule, holiday calendar
 - **Configuration** — View instance and project configuration
 - **OAuth** — Read OAuth applications and client credentials
@@ -98,7 +98,7 @@ node scripts/openproject.mjs wp-create --project my-project --subject "My first 
 
 See [SKILL.md](./SKILL.md) for full command reference.
 
-### 121 commands across 34 command groups:
+### 125 commands across 34 command groups:
 
 | Entity | Commands |
 |--------|----------|
@@ -118,7 +118,7 @@ See [SKILL.md](./SKILL.md) for full command reference.
 | Programs 🏢 | `program-list`, `program-read`, `program-update`, `program-delete` |
 | Placeholder Users 🏢 | `placeholder-user-list`, `placeholder-user-read`, `placeholder-user-create`, `placeholder-user-update`, `placeholder-user-delete` |
 | Budgets 🏢 | `budget-list`, `budget-read` |
-| Meetings 🏢 | `meeting-read`, `meeting-attachment-list`, `meeting-attachment-add` |
+| Meetings | `meeting-list`, `meeting-create`, `meeting-read`, `meeting-update`, `meeting-delete`, `meeting-attachment-list`, `meeting-attachment-add` |
 | Days | `day-read`, `days-list`, `non-working-days-list`, `non-working-day-read`, `week-days-list`, `week-day-read` |
 | Configuration | `config-read`, `project-config-read` |
 | OAuth | `oauth-app-read`, `oauth-credentials-read` |
